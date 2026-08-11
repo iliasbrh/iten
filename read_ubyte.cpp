@@ -11,7 +11,7 @@ Tensor* read_ubyte_image(FILE* input, u64 rows, u64 columns) {
                 for (u64 row=0; row<rows; row++)
                                 for (u64 col=0; col<columns; col++) {
                                                 fread(&buffer, 1, 1, input);
-                                                out->data[row*columns+col] = (f32)(buffer) / 255.;
+                                                out->data[row*columns+col] = (f32)(buffer) / 255.0f;
                                 }
 
                 return out;

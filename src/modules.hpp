@@ -12,7 +12,7 @@ class Module {
 				std::vector<Tensor*> parameters;
 				std::vector<Module*> sub_layers; // e.g. for attention that uses multiple linears
 
-				virtual ~Module() = default;
+				~Module() {delete this->activation;};
 				virtual Tensor* forward(Tensor* input) = 0; // returns the activation
 };
 
@@ -21,6 +21,7 @@ class Linear : public Module {
 				Tensor* weight;
 				Tensor* bias;
 				Linear(const std::vector<u64> &activation_shape, u64 input_features, u64 output_features);
+				~Linear();
 
 				Tensor* forward(Tensor* input) override;
 };
@@ -34,8 +35,8 @@ class ReLU : public Module {
 
 class Softmax : public Module {
 		public:
-				f32 temperature;
-				Softmax(const std::vector<u64> &activation_shape, f32 temperature = 1);
+				f32 temp;
+				Softmax(const std::vector<u64> &activation_shape, f32 temperature = 1.0f);
 
 				Tensor* forward(Tensor* input) override;
 };
@@ -43,8 +44,8 @@ class Softmax : public Module {
 class MSELoss : public Module {
 		public:
 				MSELoss(const std::vector<u64> &activation_shape);
-
-				Tensor* forward(Tensor* input) override {return NULL;};
+				
+				Tensor* forward(Tensor*) override {return nullptr;};
 				Tensor* forward(Tensor* input, Tensor* expected_output);
 };
 

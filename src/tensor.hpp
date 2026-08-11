@@ -74,7 +74,7 @@ class SoftmaxNode : public Node {
 				f32 temperature;
 				f32 divider; // keeping the sum of exponentials in memory
 				
-				SoftmaxNode(Tensor* input, Tensor* tensor_node, f32 divider, f32 temperature = 1);
+				SoftmaxNode(Tensor* input, Tensor* tensor_node, f32 div, f32 temp = 1.0f);
 				void apply() override;
 };
 

@@ -6,10 +6,9 @@ u64 multiply_vector(const std::vector<u64> &vec) {
 		return result;
 }
 
-void mat_add(f32* U, f32* V, f32* out, u64 M, u64 N, b32 zero_out) {
+void mat_add(f32* U, f32* V, f32* out, u64 M, u64 N) {
 		for (u64 row=0; row<M; row++)
 				for (u64 col=0; col<N; col++) {
-						if (zero_out) out[row*N+col] = 0;
 						out[row*N+col] = U[row*N+col] + V[row*N+col];
 				}
 }
@@ -45,7 +44,7 @@ void mat_mul_transpose_B(f32* A, f32* B, f32* out, u64 M, u64 N, u64 P, b32 zero
 
 void mat_exp(f32* A, f32* out, u64 size) {
 		for (u64 i=0; i<size; i++)
-				out[i] = exp(A[i]);
+				out[i] = expf(A[i]);
 }
 
 f32 mat_sum(f32* A, u64 size) {

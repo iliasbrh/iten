@@ -3,23 +3,22 @@
 #include "optimizer.hpp"
 
 
-#include <iostream>
-using namespace std;
-
 void Optimizer::zero_grad() {
 		for (Tensor* param : this->parameters)
-				memset(param->grad, 0, param->size * sizeof(f32));
+				memset(param->grad, 0.0f, param->size * sizeof(f32));
 }
 
-Adam::Adam(Module* model, f32 learning_rate, f32 weight_decay, f32 beta1, f32 beta2, f32 eps) {
+Adam::Adam(Module* model, f32 learning_rate, f32 weight_decay, f32 beta1, f32 beta2, f32 epsilon) {
 		this->parameter_count = 0;
 
-		this->weight_decay = weight_decay;
-		this->eps = eps;
+		this->w_decay = weight_decay;
+		this->eps = epsilon;
 
-		this->learning_rate = learning_rate;
-		this->beta1 = beta1;
-		this->beta2 = beta2;
+		this->lr = learning_rate;
+		this->b1 = beta1;
+		this->b2 = beta2;
+
+		this->running_step = 1;
 
 		// searching submodules of the model for parameters
 		std::queue<Module*> q;
@@ -59,16 +58,15 @@ void Adam::step() {
 				square = this->squares[i]->data;
 				for (u64 j=0; j<param_tensor->size; j++) {
 						grad = param_tensor->grad[j];
-						param_tensor->data[j] -= this->weight_decay * this->learning_rate * param_tensor->data[j];
-						mean[j] = this->beta1 * mean[j] + (1.-this->beta1) * grad;
-						square[j] = this->beta2 * square[j] + (1.-this->beta2) * pow(grad, 2);
-						mean_hat = mean[j] / (1. - pow(this->beta1, this->running_step));
-						square_hat = square[j] / (1. - pow(this->beta2, this->running_step));
+						param_tensor->data[j] -= this->w_decay * this->lr * param_tensor->data[j];
+						mean[j] = this->b1 * mean[j] + (1.0f-this->b1) * grad;
+						square[j] = this->b2 * square[j] + (1.0f-this->b2) * powf(grad, 2);
+						mean_hat = mean[j] / (1.0f - powf(this->b1, (f32)this->running_step));
+						square_hat = square[j] / (1.0f - powf(this->b2, (f32)this->running_step));
 						
-						param_tensor->data[j] -= this->learning_rate * mean_hat / (sqrt(square_hat) + this->eps);
+						param_tensor->data[j] -= this->lr * mean_hat / (sqrtf(square_hat) + this->eps);
 				}
 		}
-
 
 		this->running_step += 1;
 }

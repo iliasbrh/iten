@@ -23,6 +23,4 @@ typedef int8_t b8;
 typedef int32_t b32;
 
 
-#define MAX(a, b) ((a) < (b) ? (b) : (a))
-
 #endif

@@ -8,7 +8,7 @@
 
 u64 multiply_vector(const std::vector<u64> &vec); // product of vector's elements
 
-void mat_add(f32* U, f32* V, f32* out, u64 M, u64 N, b32 zero_out = false);
+void mat_add(f32* U, f32* V, f32* out, u64 M, u64 N);
 void mat_mul(f32* A, f32* B, f32* out, u64 M, u64 N, u64 P, b32 zero_out = false);
 
 // for matmul's backward pass

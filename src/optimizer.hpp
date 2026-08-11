@@ -12,7 +12,7 @@ class Optimizer {
 				std::vector<Tensor*> parameters;
 				u64 parameter_count;
 
-				f32 learning_rate;
+				f32 lr;
 
 				virtual void step() = 0;
 				void zero_grad();
@@ -23,20 +23,20 @@ class Optimizer {
 
 class Adam : public Optimizer {
 		public:
-				f32 weight_decay;
+				f32 w_decay;
 				f32 eps;
 
-				f32 beta1;
-				f32 beta2;
+				f32 b1;
+				f32 b2;
 
 				std::vector<Tensor*> means;
 				std::vector<Tensor*> squares;
 
-				u64 running_step = 1;
+				u64 running_step;
 
 				void step() override;
 
-				Adam(Module* model, f32 learning_rate=0.001, f32 weight_decay=0., f32 beta1=0.9, f32 beta2=0.999, f32 eps=1e-5);
+				Adam(Module* model, f32 learning_rate=0.001f, f32 weight_decay=0.0f, f32 beta1=0.9f, f32 beta2=0.999f, f32 epsilon=1e-8f);
 };
 
 
