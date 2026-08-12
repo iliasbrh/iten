@@ -19,7 +19,7 @@ class Node {
 				virtual void apply() = 0;
 
 				Node() = default;
-				virtual ~Node() = default;
+				virtual ~Node() = default; 
 };
 // as annoying as that seems, nodes need to have tensors as input of their constructors for context, because if they only had data pointers they would not know the shape of them
 // so tensors have node attributes and nodes need tensors as constructor inputs, it does not feel right but that will do it for now
