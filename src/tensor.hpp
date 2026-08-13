@@ -71,6 +71,7 @@ class ReLUNode : public Node {
 class SoftmaxNode : public Node {
 		public:
 				Tensor* input_ctx;
+				Tensor* output_ctx;
 				f32 temperature;
 				f32 divider; // keeping the sum of exponentials in memory
 				

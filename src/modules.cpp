@@ -77,7 +77,14 @@ Tensor* Softmax::forward(Tensor* input) {
 		if (this->activation->requires_grad)
 				memset(this->activation->grad, 0.0f, this->activation->size * sizeof(f32));
 
-		mat_exp(input->data, this->activation->data, this->activation->size);
+		// implementing the subtraction to avoid exponential overflow
+		f32 max_val = input->data[0];
+		for (u64 i=1; i<input->size; i++)
+				max_val = fmaxf(max_val, input->data[i]);
+		for (u64 i=0; i<input->size; i++)
+				this->activation->data[i] = input->data[i] - max_val;
+
+		mat_exp(this->activation->data, this->activation->data, this->activation->size);
 		f32 divider_ctx = mat_sum(this->activation->data, this->activation->size);
 		mat_scale(this->activation->data, this->activation->data, 1.0f/divider_ctx, this->activation->size);
 

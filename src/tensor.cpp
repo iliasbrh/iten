@@ -124,6 +124,7 @@ SoftmaxNode::SoftmaxNode(Tensor* input, Tensor* tensor_node, f32 div, f32 temp) 
 		this->parents = {input->grad_node};
 
 		this->input_ctx = input;
+		this->output_ctx = tensor_node;
 		this->divider = div;
 		this->temperature = temp;
 }
@@ -131,11 +132,12 @@ SoftmaxNode::SoftmaxNode(Tensor* input, Tensor* tensor_node, f32 div, f32 temp) 
 void SoftmaxNode::apply() {
 		// do it temperature wise in the future, and make it with operations from utils (since they will be the ones to be parallelized in the future)
 		// in fact, temperature is never used during training so adding it to backward passes would be useless. the only time where we set it to something other than 1 is during inference
-		for (u64 j=0; j<this->input_ctx->size; j++) {
-				for (u64 i=0; i<this->input_ctx->size; i++) {
-						this->input_ctx->grad[j] +=	this->grad[i] * ( (i==j)*expf(this->input_ctx->data[i])*this->divider - expf(this->input_ctx->data[i] + this->input_ctx->data[j]) ) / (powf(this->divider, 2));
-				}
-		}
+		f32 dot_prod = 0.0f;
+		for (u64 i=0; i<this->input_ctx->size; i++)
+				dot_prod += this->grad[i] * this->output_ctx->data[i];
+
+		for (u64 i=0; i<this->input_ctx->size; i++)
+				this->input_ctx->grad[i] += this->output_ctx->data[i] * (this->grad[i] - dot_prod);
 }
 
 
