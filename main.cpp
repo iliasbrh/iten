@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <stdlib.h>
+#include <chrono>
 
 #include "src/types.h" 
 #include "src/maths.hpp"
@@ -26,12 +27,12 @@ class BigModel : public Module {
 };
 
 BigModel::BigModel() {
-		this->linear1 = new Linear({800, 1}, 784, 800);
-		this->linear2 = new Linear({800, 1}, 800, 800);
-		this->linear3 = new Linear({10, 1}, 800, 10);
+		this->linear1 = new Linear({16, 1}, 784, 16);
+		this->linear2 = new Linear({16, 1}, 16, 16);
+		this->linear3 = new Linear({10, 1}, 16, 10);
 
-		this->relu1 = new ReLU({800, 1});
-		this->relu2 = new ReLU({800, 1});
+		this->relu1 = new ReLU({16, 1});
+		this->relu2 = new ReLU({16, 1});
 
 		this->softmax = new Softmax({10, 1});
 
@@ -91,25 +92,67 @@ int main(void) {
 		Tensor* loss_tensor;
 		for (u64 k=0; k<10; k++) {// epochs
 				f64 running_loss = 0;
-				for (u64 j=0; j<20; j++) {
+				for (u64 j=0; j<50000; j++) {
+						/*
+						auto start = chrono::high_resolution_clock::now();
+						optim.zero_grad();
+						auto end = chrono::high_resolution_clock::now();
+						chrono::duration<f64> elapsed = end - start;
+						cout << elapsed.count() << " : zero_grad" << endl; 
+
+						start = chrono::high_resolution_clock::now();
+						input = train_img.images[j];
+						end = chrono::high_resolution_clock::now();
+						elapsed = end - start;
+						cout << elapsed.count() << " : get input" << endl; 
+
+						start = chrono::high_resolution_clock::now();
+						output = model->forward(input);
+						end = chrono::high_resolution_clock::now();
+						elapsed = end - start;
+						cout << elapsed.count() << " : forward pass" << endl; 
+
+						start = chrono::high_resolution_clock::now();
+						expected_output = train_lbl.labels[j];
+						end = chrono::high_resolution_clock::now();
+						elapsed = end - start;
+						cout << elapsed.count() << " : get label" << endl; 
+
+						start = chrono::high_resolution_clock::now();
+						loss_tensor = criterion.forward(output, expected_output);
+						end = chrono::high_resolution_clock::now();
+						elapsed = end - start;
+						cout << elapsed.count() << " : forward criterion" << endl; 
+
+
+						start = chrono::high_resolution_clock::now();
+						loss_tensor->backward();
+						end = chrono::high_resolution_clock::now();
+						elapsed = end - start;
+						cout << elapsed.count() << " : backward pass" << endl; 
+
+						start = chrono::high_resolution_clock::now();
+						optim.step();
+						end = chrono::high_resolution_clock::now();
+						elapsed = end - start;
+						cout << elapsed.count() << " : optimizer step" << endl; 
+						*/
 						optim.zero_grad();
 						input = train_img.images[j];
 						output = model->forward(input);
 						expected_output = train_lbl.labels[j];
 						loss_tensor = criterion.forward(output, expected_output);
-
 						loss_tensor->backward();
 						optim.step();
 
 						running_loss += loss_tensor->data[0];
 				}
 
-				cout << running_loss/200.0f << endl;
+				cout << running_loss/10000.0f << endl;
 		}
 
 
 		delete model;
-		cout << "Finito pipo" << endl;
 
 		return 0;
 }

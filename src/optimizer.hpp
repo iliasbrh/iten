@@ -29,10 +29,11 @@ class Adam : public Optimizer {
 				f32 b1;
 				f32 b2;
 
+				f32 b1_pow;
+				f32 b2_pow;
+
 				std::vector<Tensor*> means;
 				std::vector<Tensor*> squares;
-
-				u64 running_step;
 
 				void step() override;
 

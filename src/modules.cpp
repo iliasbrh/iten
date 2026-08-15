@@ -27,7 +27,8 @@ Tensor* Linear::forward(Tensor* input) {
 		mat_mul(this->weight->data, input->data, this->activation->data, this->weight->shape[0], this->weight->shape[1], input->shape[1], true);
 		mat_add(this->activation->data, this->bias->data, this->activation->data, this->activation->shape[0], this->activation->shape[1]);
 
-		// node creation
+
+		// building graph 
 		if (this->weight->grad_node) delete this->weight->grad_node;
 		if (this->bias->grad_node) delete this->bias->grad_node;
 		if (this->activation->grad_node) delete this->activation->grad_node;
@@ -56,6 +57,7 @@ Tensor* ReLU::forward(Tensor* input) {
 		for (u64 i=0; i<input->size; i++)
 				this->activation->data[i] = fmaxf(input->data[i], 0.0f);
 
+		// building graph
 		if (this->activation->grad_node) delete this->activation->grad_node;
 		this->activation->grad_node = new ReLUNode(input, this->activation);
 
@@ -73,11 +75,11 @@ Softmax::Softmax(const std::vector<u64> &activation_shape, f32 temperature) {
 }
 
 Tensor* Softmax::forward(Tensor* input) {
-		// take care of the temperature later
 		if (this->activation->requires_grad)
 				memset(this->activation->grad, 0.0f, this->activation->size * sizeof(f32));
 
 		// implementing the subtraction to avoid exponential overflow
+		// take care of the temperature later
 		f32 max_val = input->data[0];
 		for (u64 i=1; i<input->size; i++)
 				max_val = fmaxf(max_val, input->data[i]);
@@ -88,6 +90,8 @@ Tensor* Softmax::forward(Tensor* input) {
 		f32 divider_ctx = mat_sum(this->activation->data, this->activation->size);
 		mat_scale(this->activation->data, this->activation->data, 1.0f/divider_ctx, this->activation->size);
 
+
+		// building graph
 		if (this->activation->grad_node) delete this->activation->grad_node;
 		this->activation->grad_node = new SoftmaxNode(input, this->activation, divider_ctx, this->temp);
 
@@ -106,11 +110,15 @@ MSELoss::MSELoss(const std::vector<u64> &activation_shape) {
 Tensor* MSELoss::forward(Tensor* input, Tensor* expected_output) {
 		if (this->activation->requires_grad)
 				memset(this->activation->grad, 0.0f, this->activation->size * sizeof(f32));
+
+
 		// do it with utils function later
 		this->activation->data[0] = 0.0f;
 		for (u64 i=0; i<input->size; i++)
 				this->activation->data[0] += powf((input->data[i] - expected_output->data[i]), 2) / (f32)input->size;
 
+
+		// building graph
 		if (this->activation->grad_node) delete this->activation->grad_node;
 		this->activation->grad_node = new MSELossNode(input, expected_output, this->activation);
 

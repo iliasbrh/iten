@@ -22,19 +22,18 @@ Tensor::Tensor(std::vector<u64> tensor_shape, b32 is_input, b32 req_grad) {
 		
 		this->data = (f32*)malloc(this->size * sizeof(f32));
 
-		if (this->requires_grad) {
+		if (this->requires_grad) 
+		{
 				this->grad = (f32*)malloc(this->size * sizeof(f32));
 				memset(this->grad, 0.0f, this->size*sizeof(f32));
 		}
-		else
-				this->grad = nullptr;
+		else {this->grad = nullptr;}
 
 		memset(this->data, 0.0f, this->size*sizeof(f32));
 
 		if (is_input)
-				this->grad_node = new StartNode(this);
-		else
-				this->grad_node = nullptr;
+			   this->grad_node = new StartNode(this);
+		else {this->grad_node = nullptr;}
 }
 
 Tensor::~Tensor() {

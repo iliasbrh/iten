@@ -17,8 +17,8 @@ Adam::Adam(Module* model, f32 learning_rate, f32 weight_decay, f32 beta1, f32 be
 		this->lr = learning_rate;
 		this->b1 = beta1;
 		this->b2 = beta2;
-
-		this->running_step = 1;
+		this->b1_pow = beta1;
+		this->b2_pow = beta2;
 
 		// searching submodules of the model for parameters
 		std::queue<Module*> q;
@@ -51,7 +51,7 @@ void Adam::step() {
 
 		f32 mean_hat;
 		f32 square_hat;
-		
+
 		for (u64 i=0; i<this->parameters.size(); i++) {
 				param_tensor = this->parameters[i];
 				mean = this->means[i]->data;
@@ -61,12 +61,13 @@ void Adam::step() {
 						param_tensor->data[j] -= this->w_decay * this->lr * param_tensor->data[j];
 						mean[j] = this->b1 * mean[j] + (1.0f-this->b1) * grad;
 						square[j] = this->b2 * square[j] + (1.0f-this->b2) * powf(grad, 2);
-						mean_hat = mean[j] / (1.0f - powf(this->b1, (f32)this->running_step));
-						square_hat = square[j] / (1.0f - powf(this->b2, (f32)this->running_step));
+						mean_hat = mean[j] / (1.0f - this->b1_pow);
+						square_hat = square[j] / (1.0f - this->b2_pow);
 						
 						param_tensor->data[j] -= this->lr * mean_hat / (sqrtf(square_hat) + this->eps);
 				}
 		}
 
-		this->running_step += 1;
+		this->b1_pow *= this->b1;
+		this->b2_pow *= this->b2;
 }

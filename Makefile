@@ -1,7 +1,7 @@
 SOURCES = ./main.cpp ./src/maths.cpp ./src/tensor.cpp ./src/modules.cpp ./src/optimizer.cpp ./read_ubyte.cpp;
 
 build: $(SOURCES)
-	@g++ -o main.exe $(SOURCES)
+	@g++ -o main.exe -O3 $(SOURCES)
 
 debug: $(SOURCES)
 	@g++ -std=c++20 -O0 -g3 -fno-omit-frame-pointer \
