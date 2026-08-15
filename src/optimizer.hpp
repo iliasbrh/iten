@@ -2,7 +2,7 @@
 #define OPTIMIZER_HPP
 
 #include <vector>
-#include "utils.hpp"
+#include "maths.hpp"
 #include "tensor.hpp"
 #include "modules.hpp"
 

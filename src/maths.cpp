@@ -1,4 +1,4 @@
-#include "utils.hpp"
+#include "maths.hpp"
 
 u64 multiply_vector(const std::vector<u64> &vec) {
 		u64 result = 1;
