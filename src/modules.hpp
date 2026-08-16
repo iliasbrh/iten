@@ -4,6 +4,7 @@
 #include <vector>
 #include <cmath>
 #include "tensor.hpp"
+#include "functional.hpp"
 
 class Module {
 		protected:
@@ -14,7 +15,7 @@ class Module {
 				std::vector<Tensor*> parameters;
 				std::vector<Module*> sub_layers; // e.g. for attention that uses multiple linears
 
-				virtual ~Module() {delete this->activation;};
+				virtual ~Module();
 				virtual Tensor* forward(Tensor* input) = 0; // returns the activation
 };
 
@@ -24,7 +25,7 @@ class Linear : public Module {
 				Tensor* bias;
 
 		public:
-				Linear(const std::vector<u64> &activation_shape, u64 input_features, u64 output_features);
+				Linear(u32 input_features, u32 output_features);
 				~Linear();
 
 				Tensor* forward(Tensor* input) override;
@@ -32,7 +33,7 @@ class Linear : public Module {
 
 class ReLU : public Module {
 		public:
-				ReLU(const std::vector<u64> &activation_shape);
+				ReLU();
 
 				Tensor* forward(Tensor* input) override;
 };
@@ -42,7 +43,7 @@ class Softmax : public Module {
 				f32 temp;
 
 		public:
-				Softmax(const std::vector<u64> &activation_shape, f32 temperature = 1.0f);
+				Softmax(f32 temperature = 1.0f);
 
 				Tensor* forward(Tensor* input) override;
 };
@@ -52,7 +53,7 @@ class MSELoss : public Module {
 				Tensor* forward(Tensor*) override {return nullptr;};
 
 		public:
-				MSELoss(const std::vector<u64> &activation_shape);
+				MSELoss();
 				
 				Tensor* forward(Tensor* input, Tensor* expected_output);
 };

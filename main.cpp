@@ -27,19 +27,19 @@ class BigModel : public Module {
 };
 
 BigModel::BigModel() {
-		this->linear1 = new Linear({16, 1}, 784, 16);
-		this->linear2 = new Linear({16, 1}, 16, 16);
-		this->linear3 = new Linear({10, 1}, 16, 10);
+		this->activation = nullptr;
 
-		this->relu1 = new ReLU({16, 1});
-		this->relu2 = new ReLU({16, 1});
+		this->linear1 = new Linear(784, 16);
+		this->linear2 = new Linear(16, 16);
+		this->linear3 = new Linear(16, 10);
 
-		this->softmax = new Softmax({10, 1});
+		this->relu1 = new ReLU();
+		this->relu2 = new ReLU();
+
+		this->softmax = new Softmax();
 
 		// only tracking sub layers that have parameters, so no relu and no softmax
-		this->sub_layers.push_back(this->linear1);
-		this->sub_layers.push_back(this->linear2);
-		this->sub_layers.push_back(this->linear3);
+		this->sub_layers = {this->linear1, this->linear2, this->linear3};
 }
 BigModel::~BigModel() {
 		delete this->linear1;
@@ -57,15 +57,15 @@ Tensor* BigModel::forward(Tensor* input) {
 		x = this->relu2->forward(x);
 		x = this->linear3->forward(x);
 		x = this->softmax->forward(x);
-		
+
 		return x;
 }
 
 
 
 int main(void) {
-		u64 train_sample_length = 50000; // <= 50000
-		u64 test_sample_length = 10000; // <= 10000
+		u32 train_sample_length = 50000; // <= 50000
+		u32 test_sample_length = 10000; // <= 10000
 		
 		FILE* train_img_file = fopen("train-images.idx3-ubyte", "rb");
 		img_dataset train_img = load_img_dataset(train_img_file, train_sample_length);
@@ -83,16 +83,16 @@ int main(void) {
 
 
 		BigModel* model = new BigModel();
-		MSELoss criterion({1});
+		MSELoss criterion;
 		Adam optim(model);
 		
 		Tensor* input;
 		Tensor* output;
 		Tensor* expected_output;
 		Tensor* loss_tensor;
-		for (u64 k=0; k<10; k++) {// epochs
+		for (u64 k=0; k<200; k++) {// epochs
 				f64 running_loss = 0;
-				for (u64 j=0; j<50000; j++) {
+				for (u64 j=0; j<10; j++) {
 						/*
 						auto start = chrono::high_resolution_clock::now();
 						optim.zero_grad();
@@ -138,9 +138,11 @@ int main(void) {
 						cout << elapsed.count() << " : optimizer step" << endl; 
 						*/
 						optim.zero_grad();
-						input = train_img.images[j];
+						input = train_img.images[j].get();
+						input->shape = {1, 784};
 						output = model->forward(input);
-						expected_output = train_lbl.labels[j];
+						expected_output = train_lbl.labels[j].get();
+						expected_output->shape = {1, 10};
 						loss_tensor = criterion.forward(output, expected_output);
 						loss_tensor->backward();
 						optim.step();
@@ -148,7 +150,7 @@ int main(void) {
 						running_loss += loss_tensor->data[0];
 				}
 
-				cout << running_loss/10000.0f << endl;
+				cout << running_loss/10.0f << endl;
 		}
 
 

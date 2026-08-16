@@ -4,33 +4,23 @@
 #include <vector>
 #include <cmath>
 #include <queue>
-#include <random>
 #include "stdlib.h"
 
-#include "types.h"
 #include "maths.hpp"
+#include "functional.hpp"
 
 
-class Node {
-		protected:
-				f32* grad;
 
-		public:
-				std::vector<Node*> parents; // public so that .backward can climb back up
-				virtual void apply() = 0;
-
-				Node() = default;
-				virtual ~Node() = default; 
-};
-
+class Node;
 // as annoying as that seems, nodes need to have tensors as input of their constructors for context, because if they only had data pointers they would not know the shape of them
-// so tensors have node attributes and nodes need tensors as constructor inputs, it does not feel right but that will do it for now
+// so tensors have node attributes (to be able to run tensor.backward())
+// and nodes need tensors as constructor inputs, it does not feel right but that will do it for now
 
 
 class Tensor {
 		public:
-				std::vector<u64> shape;
-				u64 size;
+				std::vector<u32> shape;
+				u32 size;
 				f32* data;
 
 				b32 requires_grad; // if true, the constructor will allocate grads, and a node will be made during forward pass
@@ -39,12 +29,22 @@ class Tensor {
 				
 				void backward(); // turns this->grad to ones, then builds the operation graph via BFS on the nodes, then applies gradients in the right order
 
-				Tensor(std::vector<u64> tensor_shape, b32 is_input=false, b32 req_grad = true); // will return a tensor of zeros by default
+				Tensor(std::vector<u32> tensor_shape, b32 is_input=false, b32 req_grad = true); // will return a tensor of zeros by default
 				~Tensor();
 };
 
-void init_parameters(Tensor* parameters, u64 input_features);
 
+class Node {
+		protected:
+				Tensor* tensor;
+
+		public:
+				std::vector<Node*> parents; // public so that .backward can climb back up
+				virtual void apply() = 0;
+
+				Node() = default;
+				virtual ~Node() = default; 
+};
 
 class StartNode : public Node { // for nodes that are not children of any other node, e.g. inputs or parameters
 		public:
@@ -77,10 +77,9 @@ class SoftmaxNode : public Node {
 				Tensor* input_ctx;
 				Tensor* output_ctx;
 				f32 temperature;
-				f32 divider; // keeping the sum of exponentials in memory
 
 		public:	
-				SoftmaxNode(Tensor* input, Tensor* tensor_node, f32 div, f32 temp = 1.0f);
+				SoftmaxNode(Tensor* input, Tensor* tensor_node, f32 temp = 1.0f);
 				void apply() override;
 };
 

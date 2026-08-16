@@ -8,21 +8,21 @@
 
 
 class Optimizer {
-		public:
-				std::vector<Tensor*> parameters;
-				u64 parameter_count;
-
+		protected:
+				u32 parameter_count;
 				f32 lr;
+				std::vector<Tensor*> parameters;
+
+		public:
+				Optimizer() = default;
+				virtual ~Optimizer() = default;
 
 				virtual void step() = 0;
 				void zero_grad();
-
-				Optimizer() = default;
-				virtual ~Optimizer() = default;
 };
 
 class Adam : public Optimizer {
-		public:
+		private:
 				f32 w_decay;
 				f32 eps;
 
@@ -32,12 +32,13 @@ class Adam : public Optimizer {
 				f32 b1_pow;
 				f32 b2_pow;
 
-				std::vector<Tensor*> means;
-				std::vector<Tensor*> squares;
+				std::vector<std::unique_ptr<Tensor>> means;
+				std::vector<std::unique_ptr<Tensor>> squares;
+		
+		public:
+				Adam(Module* model, f32 learning_rate=0.001f, f32 weight_decay=0.0f, f32 beta1=0.9f, f32 beta2=0.999f, f32 epsilon=1e-8f);
 
 				void step() override;
-
-				Adam(Module* model, f32 learning_rate=0.001f, f32 weight_decay=0.0f, f32 beta1=0.9f, f32 beta2=0.999f, f32 epsilon=1e-8f);
 };
 
 

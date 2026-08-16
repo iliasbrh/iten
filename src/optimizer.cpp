@@ -1,5 +1,6 @@
 #include <vector>
 #include <queue>
+#include <memory>
 #include "optimizer.hpp"
 
 
@@ -38,8 +39,8 @@ Adam::Adam(Module* model, f32 learning_rate, f32 weight_decay, f32 beta1, f32 be
 
 		// allocation of means and squares
 		for (Tensor* param : this->parameters) {
-				this->means.push_back(new Tensor(param->shape, false, false));
-				this->squares.push_back(new Tensor(param->shape, false, false));
+				this->means.push_back(std::make_unique<Tensor>(param->shape, false, false));
+				this->squares.push_back(std::make_unique<Tensor>(param->shape, false, false));
 		}
 }
 
@@ -54,8 +55,8 @@ void Adam::step() {
 
 		for (u64 i=0; i<this->parameters.size(); i++) {
 				param_tensor = this->parameters[i];
-				mean = this->means[i]->data;
-				square = this->squares[i]->data;
+				mean = this->means[i].get()->data;
+				square = this->squares[i].get()->data;
 				for (u64 j=0; j<param_tensor->size; j++) {
 						grad = param_tensor->grad[j];
 						param_tensor->data[j] -= this->w_decay * this->lr * param_tensor->data[j];
@@ -71,3 +72,5 @@ void Adam::step() {
 		this->b1_pow *= this->b1;
 		this->b2_pow *= this->b2;
 }
+
+
