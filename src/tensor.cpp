@@ -21,7 +21,7 @@ Tensor::Tensor(std::vector<u32> tensor_shape, device target_dev, b32 is_input, b
 			   this->grad_node = new StartNode(this);
 		else {this->grad_node = nullptr;}
 
-		this->dev = dev;
+		this->dev = target_dev;
 }
 
 Tensor::~Tensor() {

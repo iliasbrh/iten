@@ -1,6 +1,6 @@
 #include "cuda_runtime.h"
 #include "types.hpp"
-#include <cassert>
+#include <assert.h>
 
 
 enum device {

@@ -1,7 +1,5 @@
 #include "modules.hpp"
 
-using namespace std;
-
 Module::~Module() {
 		if (this->activation)
 				delete this->activation;
@@ -38,7 +36,7 @@ Tensor* Linear::forward(Tensor* input) {
 		// zero grad (not done with parameters, for which it is done with optimizer)
 		if (this->activation->requires_grad)
 				zero_memory_grad(this->activation);
-		
+
 		// computation
 		linear_layer(input, this->weight, this->bias, this->activation);
 

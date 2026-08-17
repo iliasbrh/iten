@@ -40,8 +40,10 @@ f32* _move_to(f32* data, u32 size, device target) {
 void _check_same_device(std::vector<device> devices) {
 		device first_device = devices[0];
 		b32 check = true;
-		for (u32 i = 1; i < devices.size(); i++)
-				check &= (check && (first_device == devices[i]));
+		for (u32 i = 1; i < devices.size(); i++) {
+				check &= (first_device == devices[i]);
+		}
 
+		
 		assert(check && "Device mismatch");
 }
