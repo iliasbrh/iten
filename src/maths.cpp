@@ -194,3 +194,31 @@ void _mat_scale(const f32* A, f32* out,
 }
 
 
+void _adam_step(f32* parameters_grad, f32* parameters, f32* means, f32* squares, 
+				f32 w_decay, f32 lr, f32 eps, f32 b1, f32 b2, f32 b1_pow, f32 b2_pow,
+				u32 size) {
+		f32 grad, mean_hat, square_hat;
+
+		for (u32 j = 0; j < size; j++) {
+				grad = parameters_grad[j];
+				parameters[j] -= w_decay * lr * parameters[j];
+				means[j] = b1 * means[j] + (1.0f-b1) * grad;
+				squares[j] = b2 * squares[j] + (1.0f-b2) * powf(grad, 2);
+				mean_hat = means[j] / (1.0f - b1_pow);
+				square_hat = squares[j] / (1.0f - b2_pow);
+						
+				parameters[j] -= lr * mean_hat / (sqrtf(square_hat) + eps);
+		}
+}
+
+
+
+
+
+
+
+
+
+
+
+

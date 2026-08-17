@@ -5,6 +5,7 @@
 #include "maths.hpp"
 #include "tensor.hpp"
 #include "modules.hpp"
+#include "functional.hpp"
 
 
 class Optimizer {

@@ -63,6 +63,9 @@ void _mat_scale(const f32* A, f32* out,
 			   u32 size);
 
 
+void _adam_step(f32* parameters_grad, f32* parameters, f32* means, f32* squares, 
+				f32 w_decay, f32 lr, f32 eps, f32 b1, f32 b2, f32 b1_pow, f32 b2_pow,
+				u32 size);
 
 
 #endif

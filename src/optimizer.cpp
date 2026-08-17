@@ -45,29 +45,9 @@ Adam::Adam(Module* model, f32 learning_rate, f32 weight_decay, f32 beta1, f32 be
 }
 
 void Adam::step() {
-		f32 grad;
-		Tensor* param_tensor;
-		f32* mean;
-		f32* square;
-
-		f32 mean_hat;
-		f32 square_hat;
-
-		for (u64 i=0; i<this->parameters.size(); i++) {
-				param_tensor = this->parameters[i];
-				mean = this->means[i].get()->data;
-				square = this->squares[i].get()->data;
-				for (u64 j=0; j<param_tensor->size; j++) {
-						grad = param_tensor->grad[j];
-						param_tensor->data[j] -= this->w_decay * this->lr * param_tensor->data[j];
-						mean[j] = this->b1 * mean[j] + (1.0f-this->b1) * grad;
-						square[j] = this->b2 * square[j] + (1.0f-this->b2) * powf(grad, 2);
-						mean_hat = mean[j] / (1.0f - this->b1_pow);
-						square_hat = square[j] / (1.0f - this->b2_pow);
-						
-						param_tensor->data[j] -= this->lr * mean_hat / (sqrtf(square_hat) + this->eps);
-				}
-		}
+		adam_step(this->parameters, this->means, this->squares,
+				  this->w_decay, this->lr, this->lr, this->b1, this->b2,
+				  this->b1_pow, this->b2_pow);
 
 		this->b1_pow *= this->b1;
 		this->b2_pow *= this->b2;

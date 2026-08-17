@@ -72,6 +72,17 @@ void relu_backward(Tensor* input, const Tensor* output) {
 }
 
 
+void adam_step(std::vector<Tensor*>& parameters, std::vector<std::unique_ptr<Tensor>>& means, std::vector<std::unique_ptr<Tensor>>& squares,
+				f32 w_decay, f32 lr, f32 eps, f32 b1, f32 b2, f32 b1_pow, f32 b2_pow) {
+		u32 n_tensors = (u32)parameters.size();
+
+		for (u32 i = 0; i < n_tensors; i++)
+				_adam_step(parameters[i]->grad, parameters[i]->data,
+						   means[i].get()->data, squares[i].get()->data,
+						   w_decay, lr, eps, b1, b2, b1_pow, b2_pow,
+						   parameters[i]->size);
+}
+
 
 void xavier_uniform(Tensor* parameters, u32 input_features, u32 output_features) {
 		f32 bound = sqrtf(6.0f)/sqrtf((f32)input_features + (f32)output_features);
