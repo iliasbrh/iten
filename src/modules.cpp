@@ -1,5 +1,5 @@
 #include "modules.hpp"
-#include <iostream>
+
 using namespace std;
 
 Module::~Module() {
@@ -11,11 +11,11 @@ Module::~Module() {
 // Linear layer //
 //////////////////
 
-Linear::Linear(u32 input_features, u32 output_features) {
-		this->weight = new Tensor({output_features, input_features});
+Linear::Linear(u32 input_features, u32 output_features, device target_dev) {
+		this->weight = new Tensor({output_features, input_features}, target_dev);
 		xavier_uniform(this->weight, input_features, output_features);
 
-		this->bias = new Tensor({output_features, 1});
+		this->bias = new Tensor({output_features, 1}, target_dev);
 		xavier_uniform(this->bias, input_features, output_features);
 
 		this->parameters = {this->weight, this->bias};
@@ -32,12 +32,12 @@ Tensor* Linear::forward(Tensor* input) {
 		if (!this->activation) {
 				std::vector<u32> output_shape = input->shape;
 				output_shape[output_shape.size() - 1] = this->weight->shape[0];
-				this->activation = new Tensor(output_shape);
+				this->activation = new Tensor(output_shape, input->dev);
 		}
 
 		// zero grad (not done with parameters, for which it is done with optimizer)
 		if (this->activation->requires_grad)
-				memset(this->activation->grad, 0.0f, this->activation->size * sizeof(f32));
+				zero_memory_grad(this->activation);
 		
 		// computation
 		linear_layer(input, this->weight, this->bias, this->activation);
@@ -65,9 +65,9 @@ ReLU::ReLU() {
 
 Tensor* ReLU::forward(Tensor* input) {
 		if (!this->activation)
-				this->activation = new Tensor(input->shape);
+				this->activation = new Tensor(input->shape, input->dev);
 		if (this->activation->requires_grad)
-				memset(this->activation->grad, 0.0f, this->activation->size * sizeof(f32));
+				zero_memory_grad(this->activation);
 
 		relu(input, this->activation);
 
@@ -89,9 +89,9 @@ Softmax::Softmax(f32 temperature) {
 
 Tensor* Softmax::forward(Tensor* input) {
 		if (!this->activation)
-				this->activation = new Tensor(input->shape);
+				this->activation = new Tensor(input->shape, input->dev);
 		if (this->activation->requires_grad)
-				memset(this->activation->grad, 0.0f, this->activation->size * sizeof(f32));
+				zero_memory_grad(this->activation);
 
 		softmax(input, this->activation);
 
@@ -113,9 +113,9 @@ MSELoss::MSELoss() {
 
 Tensor* MSELoss::forward(Tensor* input, Tensor* expected_output) {
 		if (!this->activation)
-				this->activation = new Tensor({1});
+				this->activation = new Tensor({1}, input->dev);
 		if (this->activation->requires_grad)
-				memset(this->activation->grad, 0.0f, this->activation->size * sizeof(f32));
+				zero_memory_grad(this->activation);
 
 		mseloss(input, expected_output, this->activation);
 

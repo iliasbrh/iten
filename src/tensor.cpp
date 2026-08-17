@@ -4,30 +4,30 @@
 // Tensors //
 /////////////
 
-Tensor::Tensor(std::vector<u32> tensor_shape, b32 is_input, b32 req_grad) {
+Tensor::Tensor(std::vector<u32> tensor_shape, device target_dev, b32 is_input, b32 req_grad) {
 		this->shape = tensor_shape;
 		this->size = multiply_vector(tensor_shape);
 		this->requires_grad = req_grad;
 		
-		this->data = (f32*)malloc(this->size * sizeof(f32));
-		memset(this->data, 0.0f, this->size*sizeof(f32));
+		this->data = _alloc(this->size*sizeof(f32), target_dev);
 
 		if (this->requires_grad) 
 		{
-				this->grad = (f32*)malloc(this->size * sizeof(f32));
-				memset(this->grad, 0.0f, this->size*sizeof(f32));
+				this->grad = _alloc(this->size*sizeof(f32), target_dev);
 		}
 		else {this->grad = nullptr;}
 
 		if (is_input)
 			   this->grad_node = new StartNode(this);
 		else {this->grad_node = nullptr;}
+
+		this->dev = dev;
 }
 
 Tensor::~Tensor() {
-		free(this->data);
+		_free(this->data, this->dev);
 		if (this->grad)
-				free(this->grad);
+				_free(this->grad, this->dev);
 
 		if (this->grad_node)
 				delete this->grad_node;

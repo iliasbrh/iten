@@ -5,7 +5,10 @@
 #include <vector>
 #include <memory>
 
+#include "types.hpp"
+#include "device_memory.cuh"
 #include "maths.hpp"
+#include "cuda_maths.cuh"
 #include "tensor.hpp"
 
 class Tensor;
@@ -25,5 +28,7 @@ void adam_step(std::vector<Tensor*>& parameters, std::vector<std::unique_ptr<Ten
 
 void xavier_uniform(Tensor* parameters, u32 input_features, u32 output_features);
 
+void zero_memory(Tensor* t);
+void zero_memory_grad(Tensor* t);
 
 #endif

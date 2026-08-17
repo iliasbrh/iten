@@ -6,7 +6,7 @@
 #include "read_ubyte.hpp"
 
 std::unique_ptr<Tensor> read_ubyte_image(FILE* input, u32 rows, u32 columns) {
-				std::unique_ptr<Tensor> out = std::make_unique<Tensor>(std::vector<u32>{rows, columns}, true);
+				std::unique_ptr<Tensor> out = std::make_unique<Tensor>(std::vector<u32>{rows, columns}, CPU, true);
 
                 u8 buffer;
                 for (u32 row=0; row<rows; row++)
@@ -19,7 +19,7 @@ std::unique_ptr<Tensor> read_ubyte_image(FILE* input, u32 rows, u32 columns) {
 }
 
 std::unique_ptr<Tensor> read_ubyte_label(FILE* input) {
-				std::unique_ptr<Tensor> out = std::make_unique<Tensor>(std::vector<u32>{1, 10});
+				std::unique_ptr<Tensor> out = std::make_unique<Tensor>(std::vector<u32>{1, 10}, CPU);
                 u8 buffer;
 				fread(&buffer, 1, 1, input);
 				for (u32 i=0; i<10; i++) {

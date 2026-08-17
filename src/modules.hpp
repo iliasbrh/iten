@@ -1,8 +1,7 @@
 #ifndef MODULES_HPP
 #define MODULES_HPP
 
-#include <vector>
-#include <cmath>
+#include "types.hpp"
 #include "tensor.hpp"
 #include "functional.hpp"
 
@@ -25,7 +24,7 @@ class Linear : public Module {
 				Tensor* bias;
 
 		public:
-				Linear(u32 input_features, u32 output_features);
+				Linear(u32 input_features, u32 output_features, device target_dev);
 				~Linear();
 
 				Tensor* forward(Tensor* input) override;
@@ -57,7 +56,7 @@ class MSELoss : public Module {
 				
 				Tensor* forward(Tensor* input, Tensor* expected_output);
 };
-
+ 
 
 
 #endif

@@ -1,9 +1,7 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
-#include <vector>
-#include <cmath>
-#include "types.h"
+#include "types.hpp"
 
 u32 multiply_vector(const std::vector<u32> &vec); // product of vector's elements, helper for tensor.size
 

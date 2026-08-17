@@ -1,12 +1,9 @@
-#include <vector>
-#include <queue>
-#include <memory>
 #include "optimizer.hpp"
 
 
 void Optimizer::zero_grad() {
 		for (Tensor* param : this->parameters)
-				memset(param->grad, 0.0f, param->size * sizeof(f32));
+				zero_memory_grad(param);
 }
 
 Adam::Adam(Module* model, f32 learning_rate, f32 weight_decay, f32 beta1, f32 beta2, f32 epsilon) {
@@ -39,8 +36,8 @@ Adam::Adam(Module* model, f32 learning_rate, f32 weight_decay, f32 beta1, f32 be
 
 		// allocation of means and squares
 		for (Tensor* param : this->parameters) {
-				this->means.push_back(std::make_unique<Tensor>(param->shape, false, false));
-				this->squares.push_back(std::make_unique<Tensor>(param->shape, false, false));
+				this->means.push_back(std::make_unique<Tensor>(param->shape, param->dev, false, false));
+				this->squares.push_back(std::make_unique<Tensor>(param->shape, param->dev, false, false));
 		}
 }
 

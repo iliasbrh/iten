@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <chrono>
 
-#include "src/types.h" 
+#include "src/types.hpp" 
 #include "src/maths.hpp"
 #include "src/tensor.hpp"
 #include "src/modules.hpp"

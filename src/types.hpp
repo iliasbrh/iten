@@ -23,4 +23,13 @@ typedef int8_t b8;
 typedef int32_t b32;
 
 
+// importing c++ utils
+#include <vector>
+#include <memory>
+#include <queue>
+#include <iostream>
+#include <cmath>
+#include "stdlib.h"
+
+
 #endif

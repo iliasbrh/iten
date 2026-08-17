@@ -1,12 +1,7 @@
 #ifndef TENSOR_HPP
 #define TENSOR_HPP
 
-#include <vector>
-#include <cmath>
-#include <queue>
-#include "stdlib.h"
-
-#include "maths.hpp"
+#include "types.hpp"
 #include "functional.hpp"
 
 
@@ -21,6 +16,7 @@ class Tensor {
 		public:
 				std::vector<u32> shape;
 				u32 size;
+				device dev;
 				f32* data;
 
 				b32 requires_grad; // if true, the constructor will allocate grads, and a node will be made during forward pass
@@ -29,7 +25,7 @@ class Tensor {
 				
 				void backward(); // turns this->grad to ones, then builds the operation graph via BFS on the nodes, then applies gradients in the right order
 
-				Tensor(std::vector<u32> tensor_shape, b32 is_input=false, b32 req_grad = true); // will return a tensor of zeros by default
+				Tensor(std::vector<u32> tensor_shape, device target_dev=CPU, b32 is_input=false, b32 req_grad = true); // will return a tensor of zeros by default
 				~Tensor();
 };
 
