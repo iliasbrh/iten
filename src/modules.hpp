@@ -24,7 +24,7 @@ class Linear : public Module {
 				Tensor* bias;
 
 		public:
-				Linear(u32 input_features, u32 output_features, device target_dev);
+				Linear(u32 input_features, u32 output_features, device target_dev=CPU);
 				~Linear();
 
 				Tensor* forward(Tensor* input) override;
