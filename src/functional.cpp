@@ -1,5 +1,7 @@
 #include "functional.hpp"
 
+// MOVE THE ZERO OUT INTO THE FUNCTIONAL FUNCTIONS INSTEAD OF DOING IT IN THE KERNELS
+
 // deal with devices, and shape mismatch, later 
 void linear_layer(const Tensor* input, const Tensor* weight, const Tensor* bias, 
 				  Tensor* out) {

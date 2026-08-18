@@ -16,6 +16,9 @@ class Module {
 
 				virtual ~Module();
 				virtual Tensor* forward(Tensor* input) = 0; // returns the activation
+
+				// add a .to function to change device
+				// this function will go through all sub_layers and parameters
 };
 
 class Linear : public Module {
