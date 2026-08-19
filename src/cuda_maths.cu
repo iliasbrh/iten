@@ -57,6 +57,7 @@ __global__ void _mat_mul_transpose_A_kernel(const f32* A, const f32* B, f32* out
 				         u32 n_lines, u32 M, u32 N, u32 P, 
 						 b32 cast_A, b32 cast_B, b32 cast_out,
 						 b32 zero_out = true) {
+		// A of shape (N, M), B of shape (N, P), out of shape (M, P)
 		u32 col = blockDim.x * blockIdx.x + threadIdx.x;
 		u32 row = blockDim.y * blockIdx.y + threadIdx.y;
 		u32 b = blockDim.z * blockIdx.z + threadIdx.z;
@@ -120,26 +121,27 @@ __global__ void _softmax_kernel(const f32* A, f32* out,
 		u32 line = blockDim.y * blockIdx.y + threadIdx.y;
 		u32 grid_stride = blockDim.x;
 
-		extern __shared__ float maximums[];
-		extern __shared__ float sums[];
+		extern __shared__ float maximums_sums[]; // stores maximums then sums after offset
+		// size 2*threadsPerBlock
+		u32 offset = blockDim.x;
 
 		if (last_idx < last_dim && line < n_lines) {
-				maximums[last_idx] = A[line*last_dim + last_idx];
+				maximums_sums[last_idx] = A[line*last_dim + last_idx];
 				for (u32 i=last_idx+grid_stride; i<last_dim; i+=grid_stride)
-						maximums[last_idx] = fmaxf(maximums[last_idx], A[line*last_dim + i]);
+						maximums_sums[last_idx] = fmaxf(maximums_sums[last_idx], A[line*last_dim + i]);
 		}
 		else {
-				maximums[last_idx] = 0.0f;
+				maximums_sums[last_idx] = 0.0f;
 		}
 
 		u32 binary_divide = last_dim;
 		i32 add_last = binary_divide%2;
 		while (binary_divide > 1) {
 				if (last_idx == 0 && add_last && line < n_lines) 
-						maximums[0] = fmaxf(maximums[0], maximums[binary_divide-1]);
+						maximums_sums[0] = fmaxf(maximums_sums[0], maximums_sums[binary_divide-1]);
 				binary_divide /= 2;
 				if (last_idx < binary_divide && line < n_lines)
-						maximums[last_idx] = fmaxf(maximums[last_idx], maximums[last_idx+binary_divide]);
+						maximums_sums[last_idx] = fmaxf(maximums_sums[last_idx], maximums_sums[last_idx+binary_divide]);
 
 				__syncthreads();
 				add_last = binary_divide%2;
@@ -148,26 +150,26 @@ __global__ void _softmax_kernel(const f32* A, f32* out,
 		// the max value of each line is now stored in maximums[0]
 
 		if (last_idx < last_dim && line < n_lines)
-				out[line*last_dim + last_idx] = __expf(A[line*last_dim + last_idx] - maximums[0]);
+				out[line*last_dim + last_idx] = __expf(A[line*last_dim + last_idx] - maximums_sums[0]);
 
 		if (last_idx < last_dim && line < n_lines) {
-				sums[last_idx] = out[line*last_dim + last_idx];
+				maximums_sums[offset+last_idx] = out[line*last_dim + last_idx];
 				for (u32 i=last_idx+grid_stride; i<last_dim; i+=grid_stride)
-						sums[last_idx] += out[line*last_dim + i];
+						maximums_sums[offset+last_idx] += out[line*last_dim + i];
 		}
 		else {
-				sums[last_idx] = 0.0f;
+				maximums_sums[offset+last_idx] = 0.0f;
 		}
 
 		u32 binary_divide = last_dim;
 		i32 add_last = binary_divide%2;
 		while (binary_divide > 1) {
 				if (last_idx == 0 && add_last && line < n_lines) 
-						sums[0] += sums[binary_divide-1];
+						maximums_sums[offset] += maximums_sums[offset+binary_divide-1];
 				__syncthreads();
 				binary_divide /= 2;
 				if (last_idx < binary_divide && line < n_lines)
-						sums[last_idx] += sums[last_idx+binary_divide];
+						maximums_sums[offset+last_idx] += maximums_sums[offset+last_idx+binary_divide];
 				add_last = binary_divide % 2;
 
 				__syncthreads();
@@ -176,7 +178,7 @@ __global__ void _softmax_kernel(const f32* A, f32* out,
 		// sum of the line stored in sums[0]
 
 		if (last_idx < last_dim && line < n_lines)
-				out[line*last_dim + last_idx] /= sums[0];
+				out[line*last_dim + last_idx] /= maximums_sums[offset];
 }
 __global__ void _softmax_backward_kernel(const f32* downstream_grads, const f32* softmaxs, f32* input_grad,
 				       u32 n_lines, u32 last_dim) {
@@ -263,8 +265,6 @@ __global__ void _mseloss_backward_kernel(const f32* A, const f32* expected,
 		if (idx < size)
 				input_grad[idx] = downstream_grad[idx] * 2.0f * scalar * (A[idx] - expected[idx]);
 }
-
-
 __global__ void _relu_kernel(const f32* A, f32* out,
 		       u32 size) {
 		u32 idx = blockDim.x * blockIdx.x + threadIdx.x;
@@ -280,18 +280,74 @@ __global__ void _relu_backward_kernel(const f32* downstream_grads, const f32* in
 				input_grad[idx] = downstream_grads[idx] * (input_data[idx] > 0.0f);
 }
 __global__ void _mat_exp_kernel(const f32* A, f32* out, 
-		     u32 size) {}
+		     u32 size) {
+		u32 idx = blockDim.x * blockIdx.x + threadIdx.x;
+
+		if (idx < size)
+				out[idx] = __expf(A[idx]);
+}
 __global__ void _mat_sum_kernel(const f32* A, f32* out,
-		    u32 size) {}
+		    u32 size) {
+		u32 tid = threadIdx.x;
+		u32 idx = blockDim.x * blockIdx.x + threadIdx.x;
+
+		extern __shared__ partial_sum[];
+
+		if (idx < size)
+				partial_sum[tid] = A[idx];
+		else
+				partial_sum[tid] = 0.0f;
+
+		u32 binary_divide = blockDim.x; // threads in the block
+		u32 add_last = binary_divide%2;
+		while (binary_divide > 1) {
+				if (add_last && tid == 0)
+						partial_sum[0] += partial_sum[binary_divide - 1];
+				binary_divide /= 2;
+				add_last = binary_divide % 2;
+				__syncthreads();
+				
+				if (tid < binary_divide)
+						partial_sum[tid] += partial_sum[tid+binary_divide];
+				__syncthreads();
+		}
+
+		if (tid == 0) atomicAdd(&out[0], partial_sum[0]);
+}
 __global__ void _mat_scale_kernel(const f32* A, f32* out, 
 		       f32 scalar, 
-			   u32 size) {}
+			   u32 size) {
+		u32 idx = blockDim.x * blockIdx.x + threadIdx.x;
 
-
+		if (idx < size)
+				out[idx] = A[idx] * scalar;
+}
 __global__ void _adam_step_kernel(f32* parameters_grad, f32* parameters, f32* means, f32* squares, 
 				f32 w_decay, f32 lr, f32 eps, f32 b1, f32 b2, f32 b1_pow, f32 b2_pow,
 				u32 size) {
+		u32 idx = blockDim.x * blockIdx.x + threadIdx.x;
 
+		f32 mean, square,
+			mean_hat, square_hat,
+			grad,
+			subtract;
+
+		if (idx < size) {
+				// writing to cache from global
+				grad = parameters_grad[idx];
+				subtract = w_decay * lr * parameters[idx];
+				mean = b1 * means[idx] + (1.0f-b1)*grad;
+				square = b2 * squares[idx] + (1.0f-b2) * grad*grad;
+
+				// computation
+				mean_hat = mean / (1.0f - b1_pow);
+				square_hat = square / (1.0f - b2_pow);
+
+				// writing to global memory
+				means[idx] = mean;
+				squares[idx] = square;
+				parameters[idx] -= subtract + lr*mean_hat / (__sqrtf(square_hat) + eps);
+		}
 }
 
 

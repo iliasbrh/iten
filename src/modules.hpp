@@ -3,7 +3,7 @@
 
 #include "types.hpp"
 #include "tensor.hpp"
-#include "functional.hpp"
+#include "functional.cuh"
 
 class Module {
 		protected:

@@ -44,6 +44,7 @@ void _mat_mul_transpose_A(const f32* A, const f32* B, f32* out,
 				         u32 n_lines, u32 M, u32 N, u32 P, 
 						 b32 cast_A, b32 cast_B, b32 cast_out,
 						 b32 zero_out) {
+		// A of shape (N, M), B of shape (N, P), out of shape (M, P)
 		if (zero_out) memset(out, 0.0f, n_lines*M*P*sizeof(f32));
 
 		for (u32 b = 0; b < n_lines; b++)

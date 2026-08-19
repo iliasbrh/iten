@@ -1,4 +1,4 @@
-SOURCES = ./main.cpp ./src/maths.cpp ./src/cuda_maths.cu ./src/device_memory.cu ./src/functional.cpp ./src/tensor.cpp ./src/modules.cpp ./src/optimizer.cpp ./read_ubyte.cpp;
+SOURCES = ./main.cpp ./src/maths.cpp ./src/cuda_maths.cu ./src/device_memory.cu ./src/functional.cu ./src/tensor.cpp ./src/modules.cpp ./src/optimizer.cpp ./read_ubyte.cpp;
 
 build_nvcc: $(SOURCES)
 	@nvcc -std=c++20 -O3 -lineinfo -DNDEBUG \

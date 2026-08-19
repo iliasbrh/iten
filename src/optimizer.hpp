@@ -2,7 +2,7 @@
 #define OPTIMIZER_HPP
 
 #include "types.hpp"
-#include "functional.hpp"
+#include "functional.cuh"
 #include "tensor.hpp"
 #include "modules.hpp"
 

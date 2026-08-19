@@ -2,7 +2,7 @@
 #define TENSOR_HPP
 
 #include "types.hpp"
-#include "functional.hpp"
+#include "functional.cuh"
 
 
 
