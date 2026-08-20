@@ -36,17 +36,15 @@ Tensor::~Tensor() {
 void Tensor::to(device_t dev) {
 		if (this->device == CPU && dev == CUDA) {
 				this->device = CUDA;
-				std::cout << "moving to cuda" << std::endl;
-				_move_to(this->data, this->size, CUDA);
-				std::cout << "succesfully moved to cuda" << std::endl;
+				this->data = _move_to(this->data, this->size, CUDA);
 				if (this->requires_grad)
-					_move_to(this->grad, this->size, CUDA);
+					this->grad = _move_to(this->grad, this->size, CUDA);
 		}
 		if (this->device == CUDA && dev == CPU) {
 				this->device = CPU;
-				_move_to(this->data, this->size, CPU);
+				this->data = _move_to(this->data, this->size, CPU);
 				if (this->requires_grad)
-					_move_to(this->grad, this->size, CPU);
+					this->grad = _move_to(this->grad, this->size, CPU);
 		}
 }
 

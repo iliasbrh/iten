@@ -29,9 +29,9 @@ class BigModel : public Module {
 BigModel::BigModel() {
 		this->activation = nullptr;
 
-		this->linear1 = new Linear(784, 16);
-		this->linear2 = new Linear(16, 16);
-		this->linear3 = new Linear(16, 10);
+		this->linear1 = new Linear(784, 800);
+		this->linear2 = new Linear(800, 800);
+		this->linear3 = new Linear(800, 10);
 
 		this->relu1 = new ReLU();
 		this->relu2 = new ReLU();
@@ -83,8 +83,9 @@ int main(void) {
 
 
 		BigModel* model = new BigModel();
-		//model->to(CUDA);
+		model->to(CUDA);
 		MSELoss criterion;
+
 		Adam optim(model);
 		
 		Tensor* input;
@@ -94,7 +95,7 @@ int main(void) {
 		f32 pass_loss;
 		for (u64 k=0; k<10; k++) {// epochs
 				f64 running_loss = 0;
-				for (u64 j=0; j<10; j++) {
+				for (u64 j=0; j<50000; j++) {
 						optim.zero_grad();
 
 						input = train_img.images[j].get();
@@ -104,8 +105,8 @@ int main(void) {
 						output = model->forward(input);
 
 						expected_output = train_lbl.labels[j].get();
-						expected_output->to(CUDA);
 						expected_output->shape = {1, 10};
+						expected_output->to(CUDA);
 						loss_tensor = criterion.forward(output, expected_output);
 
 						loss_tensor->backward();
@@ -113,11 +114,10 @@ int main(void) {
 
 						cudaMemcpy(&pass_loss, &loss_tensor->data[0], sizeof(f32), cudaMemcpyDeviceToHost);
 
-						pass_loss = loss_tensor->data[0];
 						running_loss += pass_loss;
 				}
 
-				cout << running_loss/10.0f << endl;
+				cout << running_loss/20.0f << endl;
 		}
 
 

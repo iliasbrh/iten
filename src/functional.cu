@@ -3,7 +3,7 @@
 
 // bpg stands for blocksPerGrid, to compute easily how much blocks are needed to complete
 // everything
-#define bpg(dim, threads) (((threads) + (dim) - 1) / (dim))
+#define bpg(dim, threads) (((threads) + (dim) - 1) / (threads))
 
 
 // MOVE THE ZERO OUT INTO THE FUNCTIONAL FUNCTIONS INSTEAD OF DOING IT IN THE KERNELS
@@ -26,7 +26,7 @@ void linear_layer(const Tensor* input, const Tensor* weight, const Tensor* bias,
 				// input and output are column vectors so 1 single column
 				dim3 threadsPerBlock(1, 64, 16);
 				dim3 blocksPerGrid(1, bpg(out_features, 64), bpg(n_lines, 16));
-				
+
 				_mat_mul_kernel<<<blocksPerGrid, threadsPerBlock>>>(
 								weight->data, input->data, out->data,
 								n_lines, out_features, in_features, 1,
@@ -143,6 +143,9 @@ void mseloss(const Tensor* input, const Tensor* expected, Tensor* out) {
 				i32 threadsPerBlock = 256;
 				i32 blocksPerGrid = bpg(size, 256);
 				size_t sharedMemBytes = threadsPerBlock * sizeof(f32);
+
+				cudaMemset(out->data, 0, sizeof(f32));
+
 				_mseloss_kernel<<<blocksPerGrid, threadsPerBlock, sharedMemBytes>>>(
 								input->data, expected->data, out->data,
 								size);
@@ -232,8 +235,11 @@ void adam_step(std::vector<Tensor*>& parameters, std::vector<std::unique_ptr<Ten
 								w_decay, lr, eps, b1, b2, b1_pow, b2_pow,
 								parameters[i]->size);
 				}
-
+				
 				cudaDeviceSynchronize();
+
+				for (u32 i=0; i<pool_size; i++)
+						cudaStreamDestroy(streams[i]);
 		}
 		else std::cout << "Invalid device for computation" << std::endl;
 }
@@ -262,9 +268,11 @@ void zero_memory(Tensor* t) {
 
 void zero_memory_grad(Tensor* t) {
 		if (t->device == CPU)
-				memset(t->grad, 0.0f, t->size*sizeof(f32));
-		else if (t->device == CUDA)
-				cudaMemset(t->grad, 0.0f, t->size*sizeof(f32));
+				memset(t->grad, 0, t->size*sizeof(f32));
+		else if (t->device == CUDA) {
+				size_t mem_size = (size_t)t->size * sizeof(f32);
+				cudaMemset(t->grad, 0, mem_size);
+		}
 		else
 				std::cout << "Invalid device for computation" << std::endl;
 }
@@ -277,7 +285,7 @@ void grad_fill_ones(Tensor* t) {
 		if (t->device == CUDA) {
 				i32 threads = 256;
 				i32 blocks = bpg(t->size, threads);
-				_set_value_kernel<<<threads, blocks>>>(t->grad, 1.0f, t->size);
+				_set_value_kernel<<<blocks, threads>>>(t->grad, 1.0f, t->size);
 		}
 }
 

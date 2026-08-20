@@ -43,7 +43,7 @@ Adam::Adam(Module* model, f32 learning_rate, f32 weight_decay, f32 beta1, f32 be
 
 void Adam::step() {
 		adam_step(this->parameters, this->means, this->squares,
-				  this->w_decay, this->lr, this->lr, this->b1, this->b2,
+				  this->w_decay, this->lr, this->eps, this->b1, this->b2,
 				  this->b1_pow, this->b2_pow);
 
 		this->b1_pow *= this->b1;

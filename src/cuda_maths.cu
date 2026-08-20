@@ -11,7 +11,7 @@ __global__ void _mat_add_kernel(const f32* A, const f32* B, f32* out,
 		u32 stride = b*M*N;
 		u32 idx = row*N+col;
 
-		if (col < N && row < M)
+		if (col < N && row < M && b < n_lines)
 				out[(1-cast_out)*stride+idx] =
 						A[(1-cast_A)*stride+idx] + B[(1-cast_B)*stride+idx];
 }
@@ -25,7 +25,7 @@ __global__ void _mat_sub_kernel(const f32* A, const f32* B, f32* out,
 		u32 stride = b*M*N;
 		u32 idx = row*N+col;
 
-		if (col < N && row < M)
+		if (col < N && row < M && b < n_lines)
 				out[(1-cast_out)*stride+idx] =
 						A[(1-cast_A)*stride+idx] - B[(1-cast_B)*stride+idx];
 }
@@ -43,8 +43,8 @@ __global__ void _mat_mul_kernel(const f32* A, const f32* B, f32* out,
 		u32 stride_B = b*N*P;
 		u32 idx = row*P+col;
 		
-		if (col < P && row < M) {
-				out[(1-cast_out)*stride_out+idx] *= zero_out;
+		if (col < P && row < M && b < n_lines) {
+				out[(1-cast_out)*stride_out+idx] *= 1-zero_out;
 				f32 sum = 0.0f;
 				for (u32 k = 0; k < N; k++)
 						sum +=
@@ -67,8 +67,8 @@ __global__ void _mat_mul_transpose_A_kernel(const f32* A, const f32* B, f32* out
 		u32 stride_B = b*N*P;
 		u32 idx = row*P+col;
 		
-		if (col < P && row < M) {
-				out[(1-cast_out)*stride_out+idx] *= zero_out;
+		if (col < P && row < M && b < n_lines) {
+				out[(1-cast_out)*stride_out+idx] *= 1-zero_out;
 				f32 sum = 0.0f;
 				for (u32 k = 0; k < N; k++)
 						sum +=
@@ -90,8 +90,8 @@ __global__ void _mat_mul_transpose_B_kernel(const f32* A, const f32* B, f32* out
 		u32 stride_B = b*N*P;
 		u32 idx = row*P+col;
 		
-		if (col < P && row < M) {
-				out[(1-cast_out)*stride_out+idx] *= zero_out;
+		if (col < P && row < M && b < n_lines) {
+				out[(1-cast_out)*stride_out+idx] *= 1-zero_out;
 				f32 sum = 0.0f;
 				for (u32 k = 0; k < N; k++)
 						sum +=
@@ -134,7 +134,9 @@ __global__ void _softmax_kernel(const f32* A, f32* out,
 				maximums_sums[last_idx] = 0.0f;
 		}
 
-		u32 binary_divide = last_dim;
+		__syncthreads();
+
+		u32 binary_divide = offset;
 		i32 add_last = binary_divide%2;
 		while (binary_divide > 1) {
 				if (last_idx == 0 && add_last && line < n_lines) 
@@ -149,8 +151,11 @@ __global__ void _softmax_kernel(const f32* A, f32* out,
 
 		// the max value of each line is now stored in maximums[0]
 
-		if (last_idx < last_dim && line < n_lines)
+		if (last_idx < last_dim && line < n_lines) {
 				out[line*last_dim + last_idx] = __expf(A[line*last_dim + last_idx] - maximums_sums[0]);
+				for (u32 i=last_idx+grid_stride; i<last_dim; i+=grid_stride)
+					out[line*last_dim + i] = __expf(A[line*last_dim + i] - maximums_sums[0]);
+		}
 
 		if (last_idx < last_dim && line < n_lines) {
 				maximums_sums[offset+last_idx] = out[line*last_dim + last_idx];
@@ -161,7 +166,10 @@ __global__ void _softmax_kernel(const f32* A, f32* out,
 				maximums_sums[offset+last_idx] = 0.0f;
 		}
 
-		binary_divide = last_dim;
+		__syncthreads();
+
+
+		binary_divide = offset;
 		add_last = binary_divide%2;
 		while (binary_divide > 1) {
 				if (last_idx == 0 && add_last && line < n_lines) 
@@ -198,7 +206,9 @@ __global__ void _softmax_backward_kernel(const f32* downstream_grads, const f32*
 				scalars[last_idx] = 0.0f;
 		}
 
-		u32 binary_divide = last_dim;
+		__syncthreads();
+
+		u32 binary_divide = blockDim.x;
 		i32 add_last = binary_divide%2;
 		while (binary_divide > 1) {
 				if (add_last && last_idx == 0)
@@ -215,7 +225,7 @@ __global__ void _softmax_backward_kernel(const f32* downstream_grads, const f32*
 
 		if (last_idx < last_dim && line < n_lines)
 				for (u32 i=last_idx; i<last_dim; i+=grid_stride)
-						input_grad[line*last_dim + i] = softmaxs[line*last_dim + i] * (downstream_grads[line*last_dim + i] - scalars[0]);
+						input_grad[line*last_dim + i] += softmaxs[line*last_dim + i] * (downstream_grads[line*last_dim + i] - scalars[0]);
 }
 __global__ void _mseloss_kernel(const f32* A, const f32* expected, f32* out,
 		      u32 size) {
@@ -231,13 +241,16 @@ __global__ void _mseloss_kernel(const f32* A, const f32* expected, f32* out,
 		if (idx < size) {
 				f32 diff = A[idx] - expected[idx];
 				sums[tid] = diff*diff*scalar; // float exponent with __powf can't work for negative values (because it uses log) so we just multiply by itself
-				for (u32 i=idx+grid_stride; i<size; i+=grid_stride)
+				for (u32 i=idx+grid_stride; i<size; i+=grid_stride) {
 						diff = A[i] - expected[i];
 						sums[tid] += diff*diff*scalar;
+				}
 		}
 		else {
 				sums[tid] = 0.0f; // flat out the garbage to zero to not bother adding it afterwards, the threads will run anyway
 		}
+
+		__syncthreads();
 
 		u32 binary_divide = blockDim.x;
 		i32 add_last = binary_divide%2;
@@ -263,7 +276,8 @@ __global__ void _mseloss_backward_kernel(const f32* A, const f32* expected,
 		f32 scalar = 1.0f / (f32)size;
 
 		if (idx < size)
-				input_grad[idx] = downstream_grad[idx] * 2.0f * scalar * (A[idx] - expected[idx]);
+				input_grad[idx] += downstream_grad[0] * 2.0f * scalar * (A[idx] - expected[idx]);
+				// taking downstream_grad[0] because mseloss outputs a single value
 }
 __global__ void _relu_kernel(const f32* A, f32* out,
 		       u32 size) {
@@ -277,7 +291,7 @@ __global__ void _relu_backward_kernel(const f32* downstream_grads, const f32* in
 		u32 idx = blockDim.x * blockIdx.x + threadIdx.x;
 
 		if (idx < size)
-				input_grad[idx] = downstream_grads[idx] * (input_data[idx] > 0.0f);
+				input_grad[idx] += downstream_grads[idx] * (input_data[idx] > 0.0f);
 }
 __global__ void _mat_exp_kernel(const f32* A, f32* out, 
 		     u32 size) {
@@ -297,6 +311,8 @@ __global__ void _mat_sum_kernel(const f32* A, f32* out,
 				partial_sum[tid] = A[idx];
 		else
 				partial_sum[tid] = 0.0f;
+
+		__syncthreads();
 
 		u32 binary_divide = blockDim.x; // threads in the block
 		u32 add_last = binary_divide%2;
@@ -346,7 +362,7 @@ __global__ void _adam_step_kernel(f32* parameters_grad, f32* parameters, f32* me
 				// writing to global memory
 				means[idx] = mean;
 				squares[idx] = square;
-				parameters[idx] -= subtract + lr*mean_hat / (sqrtf(square_hat) + eps);
+				parameters[idx] -= (subtract + lr*mean_hat / (sqrtf(square_hat) + eps) );
 		}
 }
 __global__ void _set_value_kernel(f32* data, f32 value, u32 size) {
