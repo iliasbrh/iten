@@ -52,3 +52,4 @@ __global__ void _mat_scale_kernel(const f32* A, f32* out,
 __global__ void _adam_step_kernel(f32* parameters_grad, f32* parameters, f32* means, f32* squares, 
 				f32 w_decay, f32 lr, f32 eps, f32 b1, f32 b2, f32 b1_pow, f32 b2_pow,
 				u32 size);
+__global__ void _set_value_kernel(f32* data, f32 value, u32 size);

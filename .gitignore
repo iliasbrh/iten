@@ -4,4 +4,7 @@ todo.txt
 files.txt
 **ubyte
 
+run.sh
+/slurmlogs
+
 /.git

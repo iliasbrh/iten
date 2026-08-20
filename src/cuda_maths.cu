@@ -349,7 +349,12 @@ __global__ void _adam_step_kernel(f32* parameters_grad, f32* parameters, f32* me
 				parameters[idx] -= subtract + lr*mean_hat / (sqrtf(square_hat) + eps);
 		}
 }
+__global__ void _set_value_kernel(f32* data, f32 value, u32 size) {
+		u32 idx = blockDim.x * blockIdx.x + threadIdx.x;
 
+		if (idx < size)
+				data[idx] = value;
+}
 
 
 

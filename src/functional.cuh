@@ -30,5 +30,6 @@ void xavier_uniform(Tensor* parameters, u32 input_features, u32 output_features)
 
 void zero_memory(Tensor* t);
 void zero_memory_grad(Tensor* t);
+void grad_fill_ones(Tensor* t);
 
 #endif

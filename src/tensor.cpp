@@ -36,17 +36,22 @@ Tensor::~Tensor() {
 void Tensor::to(device_t dev) {
 		if (this->device == CPU && dev == CUDA) {
 				this->device = CUDA;
+				std::cout << "moving to cuda" << std::endl;
 				_move_to(this->data, this->size, CUDA);
+				std::cout << "succesfully moved to cuda" << std::endl;
+				if (this->requires_grad)
+					_move_to(this->grad, this->size, CUDA);
 		}
 		if (this->device == CUDA && dev == CPU) {
 				this->device = CPU;
 				_move_to(this->data, this->size, CPU);
+				if (this->requires_grad)
+					_move_to(this->grad, this->size, CPU);
 		}
 }
 
 void Tensor::backward() { // to reimplement for a proper reverse topological graph
-		for (u64 i=0; i<this->size; i++)
-				this->grad[i] = 1.0f;
+		grad_fill_ones(this);
 		
 		// building bfs backpass graph
 		std::vector<Node*> bfs_visited;

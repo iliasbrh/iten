@@ -31,5 +31,7 @@ typedef int32_t b32;
 #include <cmath>
 #include "stdlib.h"
 
+#include "cuda_runtime.h"
+
 
 #endif

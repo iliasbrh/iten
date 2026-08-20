@@ -83,7 +83,7 @@ int main(void) {
 
 
 		BigModel* model = new BigModel();
-		model->to(CUDA);
+		//model->to(CUDA);
 		MSELoss criterion;
 		Adam optim(model);
 		
@@ -91,76 +91,30 @@ int main(void) {
 		Tensor* output;
 		Tensor* expected_output;
 		Tensor* loss_tensor;
-		for (u64 k=0; k<200; k++) {// epochs
+		f32 pass_loss;
+		for (u64 k=0; k<10; k++) {// epochs
 				f64 running_loss = 0;
 				for (u64 j=0; j<10; j++) {
-						/*
-						auto start = chrono::high_resolution_clock::now();
 						optim.zero_grad();
-						auto end = chrono::high_resolution_clock::now();
-						chrono::duration<f64> elapsed = end - start;
-						cout << elapsed.count() << " : zero_grad" << endl; 
 
-						start = chrono::high_resolution_clock::now();
-						input = train_img.images[j];
-						end = chrono::high_resolution_clock::now();
-						elapsed = end - start;
-						cout << elapsed.count() << " : get input" << endl; 
-
-						start = chrono::high_resolution_clock::now();
-						output = model->forward(input);
-						end = chrono::high_resolution_clock::now();
-						elapsed = end - start;
-						cout << elapsed.count() << " : forward pass" << endl; 
-
-						start = chrono::high_resolution_clock::now();
-						expected_output = train_lbl.labels[j];
-						end = chrono::high_resolution_clock::now();
-						elapsed = end - start;
-						cout << elapsed.count() << " : get label" << endl; 
-
-						start = chrono::high_resolution_clock::now();
-						loss_tensor = criterion.forward(output, expected_output);
-						end = chrono::high_resolution_clock::now();
-						elapsed = end - start;
-						cout << elapsed.count() << " : forward criterion" << endl; 
-
-
-						start = chrono::high_resolution_clock::now();
-						loss_tensor->backward();
-						end = chrono::high_resolution_clock::now();
-						elapsed = end - start;
-						cout << elapsed.count() << " : backward pass" << endl; 
-
-						start = chrono::high_resolution_clock::now();
-						optim.step();
-						end = chrono::high_resolution_clock::now();
-						elapsed = end - start;
-						cout << elapsed.count() << " : optimizer step" << endl; 
-						*/
-						cout << "Still there" << endl;
-						optim.zero_grad();
-						cout << "Still there" << endl;
 						input = train_img.images[j].get();
-						cout << "Still there" << endl;
 						input->shape = {1, 784};
-						cout << "Still there" << endl;
 						input->to(CUDA);
-						cout << "Still there" << endl;
-						output = model->forward(input);
-						cout << "Still there" << endl;
-						expected_output = train_lbl.labels[j].get();
-						cout << "Still there" << endl;
-						expected_output->shape = {1, 10};
-						cout << "Still there" << endl;
-						loss_tensor = criterion.forward(output, expected_output);
-						cout << "Still there" << endl;
-						loss_tensor->backward();
-						cout << "Still there" << endl;
-						optim.step();
-						cout << "Still there" << endl;
 
-						running_loss += loss_tensor->data[0];
+						output = model->forward(input);
+
+						expected_output = train_lbl.labels[j].get();
+						expected_output->to(CUDA);
+						expected_output->shape = {1, 10};
+						loss_tensor = criterion.forward(output, expected_output);
+
+						loss_tensor->backward();
+						optim.step();
+
+						cudaMemcpy(&pass_loss, &loss_tensor->data[0], sizeof(f32), cudaMemcpyDeviceToHost);
+
+						pass_loss = loss_tensor->data[0];
+						running_loss += pass_loss;
 				}
 
 				cout << running_loss/10.0f << endl;

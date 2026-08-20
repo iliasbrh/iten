@@ -269,3 +269,15 @@ void zero_memory_grad(Tensor* t) {
 				std::cout << "Invalid device for computation" << std::endl;
 }
 
+void grad_fill_ones(Tensor* t) {
+		if (t->device == CPU) {
+				for (u64 i=0; i<t->size; i++)
+						t->grad[i] = 1.0f;
+		}
+		if (t->device == CUDA) {
+				i32 threads = 256;
+				i32 blocks = bpg(t->size, threads);
+				_set_value_kernel<<<threads, blocks>>>(t->grad, 1.0f, t->size);
+		}
+}
+
