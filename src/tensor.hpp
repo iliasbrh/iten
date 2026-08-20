@@ -16,16 +16,18 @@ class Tensor {
 		public:
 				std::vector<u32> shape;
 				u32 size;
-				device dev;
+				device_t device;
 				f32* data;
 
 				b32 requires_grad; // if true, the constructor will allocate grads, and a node will be made during forward pass
 				f32* grad;
 				Node* grad_node;
 				
+				void to(device_t dev);
 				void backward(); // turns this->grad to ones, then builds the operation graph via BFS on the nodes, then applies gradients in the right order
 
-				Tensor(std::vector<u32> tensor_shape, device target_dev=CPU, b32 is_input=false, b32 req_grad = true); // will return a tensor of zeros by default
+				
+				Tensor(std::vector<u32> tensor_shape, device_t target_device=CPU, b32 is_input=false, b32 req_grad = true); // will return a tensor of zeros by default
 				~Tensor();
 };
 

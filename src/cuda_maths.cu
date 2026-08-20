@@ -32,7 +32,7 @@ __global__ void _mat_sub_kernel(const f32* A, const f32* B, f32* out,
 __global__ void _mat_mul_kernel(const f32* A, const f32* B, f32* out, 
 		      u32 n_lines, u32 M, u32 N, u32 P, 
 			  b32 cast_A, b32 cast_B, b32 cast_out, 
-			  b32 zero_out = true) {
+			  b32 zero_out) {
 		// naive implementation for now
 		u32 col = blockDim.x * blockIdx.x + threadIdx.x;
 		u32 row = blockDim.y * blockIdx.y + threadIdx.y;
@@ -56,7 +56,7 @@ __global__ void _mat_mul_kernel(const f32* A, const f32* B, f32* out,
 __global__ void _mat_mul_transpose_A_kernel(const f32* A, const f32* B, f32* out, 
 				         u32 n_lines, u32 M, u32 N, u32 P, 
 						 b32 cast_A, b32 cast_B, b32 cast_out,
-						 b32 zero_out = true) {
+						 b32 zero_out) {
 		// A of shape (N, M), B of shape (N, P), out of shape (M, P)
 		u32 col = blockDim.x * blockIdx.x + threadIdx.x;
 		u32 row = blockDim.y * blockIdx.y + threadIdx.y;
@@ -80,7 +80,7 @@ __global__ void _mat_mul_transpose_A_kernel(const f32* A, const f32* B, f32* out
 __global__ void _mat_mul_transpose_B_kernel(const f32* A, const f32* B, f32* out, 
 						 u32 n_lines, u32 M, u32 N, u32 P, 
 						 b32 cast_A, b32 cast_B, b32 cast_out,
-						 b32 zero_out = true) {
+						 b32 zero_out) {
 		u32 col = blockDim.x * blockIdx.x + threadIdx.x;
 		u32 row = blockDim.y * blockIdx.y + threadIdx.y;
 		u32 b = blockDim.z * blockIdx.z + threadIdx.z;
@@ -161,8 +161,8 @@ __global__ void _softmax_kernel(const f32* A, f32* out,
 				maximums_sums[offset+last_idx] = 0.0f;
 		}
 
-		u32 binary_divide = last_dim;
-		i32 add_last = binary_divide%2;
+		binary_divide = last_dim;
+		add_last = binary_divide%2;
 		while (binary_divide > 1) {
 				if (last_idx == 0 && add_last && line < n_lines) 
 						maximums_sums[offset] += maximums_sums[offset+binary_divide-1];
@@ -291,7 +291,7 @@ __global__ void _mat_sum_kernel(const f32* A, f32* out,
 		u32 tid = threadIdx.x;
 		u32 idx = blockDim.x * blockIdx.x + threadIdx.x;
 
-		extern __shared__ partial_sum[];
+		extern __shared__ f32 partial_sum[];
 
 		if (idx < size)
 				partial_sum[tid] = A[idx];
@@ -346,7 +346,7 @@ __global__ void _adam_step_kernel(f32* parameters_grad, f32* parameters, f32* me
 				// writing to global memory
 				means[idx] = mean;
 				squares[idx] = square;
-				parameters[idx] -= subtract + lr*mean_hat / (__sqrtf(square_hat) + eps);
+				parameters[idx] -= subtract + lr*mean_hat / (sqrtf(square_hat) + eps);
 		}
 }
 

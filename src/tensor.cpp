@@ -4,16 +4,16 @@
 // Tensors //
 /////////////
 
-Tensor::Tensor(std::vector<u32> tensor_shape, device target_dev, b32 is_input, b32 req_grad) {
+Tensor::Tensor(std::vector<u32> tensor_shape, device_t target_device, b32 is_input, b32 req_grad) {
 		this->shape = tensor_shape;
 		this->size = multiply_vector(tensor_shape);
 		this->requires_grad = req_grad;
 		
-		this->data = _alloc(this->size*sizeof(f32), target_dev);
+		this->data = _alloc(this->size*sizeof(f32), target_device);
 
 		if (this->requires_grad) 
 		{
-				this->grad = _alloc(this->size*sizeof(f32), target_dev);
+				this->grad = _alloc(this->size*sizeof(f32), target_device);
 		}
 		else {this->grad = nullptr;}
 
@@ -21,16 +21,27 @@ Tensor::Tensor(std::vector<u32> tensor_shape, device target_dev, b32 is_input, b
 			   this->grad_node = new StartNode(this);
 		else {this->grad_node = nullptr;}
 
-		this->dev = target_dev;
+		this->device = target_device;
 }
 
 Tensor::~Tensor() {
-		_free(this->data, this->dev);
+		_free(this->data, this->device);
 		if (this->grad)
-				_free(this->grad, this->dev);
+				_free(this->grad, this->device);
 
 		if (this->grad_node)
 				delete this->grad_node;
+}
+
+void Tensor::to(device_t dev) {
+		if (this->device == CPU && dev == CUDA) {
+				this->device = CUDA;
+				_move_to(this->data, this->size, CUDA);
+		}
+		if (this->device == CUDA && dev == CPU) {
+				this->device = CPU;
+				_move_to(this->data, this->size, CPU);
+		}
 }
 
 void Tensor::backward() { // to reimplement for a proper reverse topological graph

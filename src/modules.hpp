@@ -13,6 +13,7 @@ class Module {
 		public:
 				std::vector<Tensor*> parameters;
 				std::vector<Module*> sub_layers; // e.g. for attention that uses multiple linears
+				void to(device_t device);
 
 				virtual ~Module();
 				virtual Tensor* forward(Tensor* input) = 0; // returns the activation
@@ -27,7 +28,7 @@ class Linear : public Module {
 				Tensor* bias;
 
 		public:
-				Linear(u32 input_features, u32 output_features, device target_dev=CPU);
+				Linear(u32 input_features, u32 output_features, device_t target_device=CPU);
 				~Linear();
 
 				Tensor* forward(Tensor* input) override;

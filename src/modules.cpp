@@ -5,15 +5,22 @@ Module::~Module() {
 				delete this->activation;
 }
 
+void Module::to(device_t device) {
+		for (Tensor* param : this->parameters)
+				param->to(device);
+		for (Module* sub_module : this->sub_layers)
+				sub_module->to(device);
+}
+
 //////////////////
 // Linear layer //
 //////////////////
 
-Linear::Linear(u32 input_features, u32 output_features, device target_dev) {
-		this->weight = new Tensor({output_features, input_features}, target_dev);
+Linear::Linear(u32 input_features, u32 output_features, device_t target_device) {
+		this->weight = new Tensor({output_features, input_features}, target_device);
 		xavier_uniform(this->weight, input_features, output_features);
 
-		this->bias = new Tensor({output_features, 1}, target_dev);
+		this->bias = new Tensor({output_features, 1}, target_device);
 		xavier_uniform(this->bias, input_features, output_features);
 
 		this->parameters = {this->weight, this->bias};
@@ -30,7 +37,7 @@ Tensor* Linear::forward(Tensor* input) {
 		if (!this->activation) {
 				std::vector<u32> output_shape = input->shape;
 				output_shape[output_shape.size() - 1] = this->weight->shape[0];
-				this->activation = new Tensor(output_shape, input->dev);
+				this->activation = new Tensor(output_shape, input->device);
 		}
 
 		// zero grad (not done with parameters, for which it is done with optimizer)
@@ -63,7 +70,7 @@ ReLU::ReLU() {
 
 Tensor* ReLU::forward(Tensor* input) {
 		if (!this->activation)
-				this->activation = new Tensor(input->shape, input->dev);
+				this->activation = new Tensor(input->shape, input->device);
 		if (this->activation->requires_grad)
 				zero_memory_grad(this->activation);
 
@@ -87,7 +94,7 @@ Softmax::Softmax(f32 temperature) {
 
 Tensor* Softmax::forward(Tensor* input) {
 		if (!this->activation)
-				this->activation = new Tensor(input->shape, input->dev);
+				this->activation = new Tensor(input->shape, input->device);
 		if (this->activation->requires_grad)
 				zero_memory_grad(this->activation);
 
@@ -111,7 +118,7 @@ MSELoss::MSELoss() {
 
 Tensor* MSELoss::forward(Tensor* input, Tensor* expected_output) {
 		if (!this->activation)
-				this->activation = new Tensor({1}, input->dev);
+				this->activation = new Tensor({1}, input->device);
 		if (this->activation->requires_grad)
 				zero_memory_grad(this->activation);
 

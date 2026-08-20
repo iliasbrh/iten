@@ -83,6 +83,7 @@ int main(void) {
 
 
 		BigModel* model = new BigModel();
+		model->to(CUDA);
 		MSELoss criterion;
 		Adam optim(model);
 		
@@ -137,15 +138,27 @@ int main(void) {
 						elapsed = end - start;
 						cout << elapsed.count() << " : optimizer step" << endl; 
 						*/
+						cout << "Still there" << endl;
 						optim.zero_grad();
+						cout << "Still there" << endl;
 						input = train_img.images[j].get();
+						cout << "Still there" << endl;
 						input->shape = {1, 784};
+						cout << "Still there" << endl;
+						input->to(CUDA);
+						cout << "Still there" << endl;
 						output = model->forward(input);
+						cout << "Still there" << endl;
 						expected_output = train_lbl.labels[j].get();
+						cout << "Still there" << endl;
 						expected_output->shape = {1, 10};
+						cout << "Still there" << endl;
 						loss_tensor = criterion.forward(output, expected_output);
+						cout << "Still there" << endl;
 						loss_tensor->backward();
+						cout << "Still there" << endl;
 						optim.step();
+						cout << "Still there" << endl;
 
 						running_loss += loss_tensor->data[0];
 				}

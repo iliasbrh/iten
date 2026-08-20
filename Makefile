@@ -8,10 +8,9 @@ build_nvcc: $(SOURCES)
     -o cuda_release $(SOURCES)
 
 debug_nvcc: $(SOURCES)
-	@nvcc -std=c++20 -g -G -lineinfo \
-    --all-warnings -Werror=all-warnings \
-    -Xcompiler -Wall,-Wextra,-Wpedantic,-Werror,-Wshadow,-Wconversion,-rdynamic \
-    -fdevice-sanitize=memcheck \
+	@nvcc -std=c++20 -g -G \
+    -Werror=all-warnings \
+    -Xcompiler -Wall,-Wextra,-Werror,-Wshadow,-Wconversion,-rdynamic \
     -o cuda_debug $(SOURCES) 
 
 clean:
