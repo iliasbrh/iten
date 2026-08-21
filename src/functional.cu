@@ -27,6 +27,7 @@ void linear_layer(const Tensor* input, const Tensor* weight, const Tensor* bias,
 				dim3 threadsPerBlock(1, 64, 16);
 				dim3 blocksPerGrid(1, bpg(out_features, 64), bpg(n_lines, 16));
 
+				
 				_mat_mul_kernel<<<blocksPerGrid, threadsPerBlock>>>(
 								weight->data, input->data, out->data,
 								n_lines, out_features, in_features, 1,
@@ -261,9 +262,9 @@ void xavier_uniform(Tensor* parameters, u32 input_features, u32 output_features)
 
 void zero_memory(Tensor* t) {
 		if (t->device == CPU)
-				memset(t->data, 0.0f, t->size*sizeof(f32));
+				memset(t->data, 0, t->size*sizeof(f32));
 		else if (t->device == CUDA)
-				cudaMemset(t->data, 0.0f, t->size*sizeof(f32));
+				cudaMemset(t->data, 0, t->size*sizeof(f32));
 }
 
 void zero_memory_grad(Tensor* t) {

@@ -5,6 +5,8 @@ files.txt
 **ubyte
 
 run.sh
+debug.sh
+release.sh
 /slurmlogs
 
 /.git

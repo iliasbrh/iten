@@ -29,9 +29,21 @@ typedef int32_t b32;
 #include <queue>
 #include <iostream>
 #include <cmath>
+#include <chrono>
 #include "stdlib.h"
 
 #include "cuda_runtime.h"
+
+
+// execution time macro
+
+#define TIME_INSTRUCTION(instruction, text) do { \
+	auto start = std::chrono::high_resolution_clock::now(); \
+	instruction \
+	auto end = std::chrono::high_resolution_clock::now(); \
+	std::chrono::duration<double, std::milli> elapsed = end - start; \
+	std::cout << text << " : " << elapsed.count() << " ms\n"; \
+} while(0)
 
 
 #endif

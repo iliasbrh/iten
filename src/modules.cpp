@@ -45,6 +45,7 @@ Tensor* Linear::forward(Tensor* input) {
 				zero_memory_grad(this->activation);
 
 		// computation
+
 		linear_layer(input, this->weight, this->bias, this->activation);
 
 		// building graph 

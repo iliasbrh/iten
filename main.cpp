@@ -1,65 +1,16 @@
-#include <vector>
-#include <iostream>
 #include <stdlib.h>
-#include <chrono>
+#include <iostream>
 
-#include "src/types.hpp" 
-#include "src/maths.hpp"
-#include "src/tensor.hpp"
-#include "src/modules.hpp"
-#include "src/optimizer.hpp"
+#include "iten.hpp"
 #include "read_ubyte.hpp"
+#include "model.hpp"
+
 
 using namespace std;
 
-class BigModel : public Module {
-		public:
-				Linear* linear1;
-				ReLU* relu1;
-				Linear* linear2;
-				ReLU* relu2;
-				Linear* linear3;
-				Softmax* softmax;
 
-				BigModel();
-				~BigModel();
-				Tensor* forward(Tensor* input) override;
-};
 
-BigModel::BigModel() {
-		this->activation = nullptr;
 
-		this->linear1 = new Linear(784, 800);
-		this->linear2 = new Linear(800, 800);
-		this->linear3 = new Linear(800, 10);
-
-		this->relu1 = new ReLU();
-		this->relu2 = new ReLU();
-
-		this->softmax = new Softmax();
-
-		// only tracking sub layers that have parameters, so no relu and no softmax
-		this->sub_layers = {this->linear1, this->linear2, this->linear3};
-}
-BigModel::~BigModel() {
-		delete this->linear1;
-		delete this->linear2;
-		delete this->linear3;
-		delete this->relu1;
-		delete this->relu2;
-		delete this->softmax;
-}
-Tensor* BigModel::forward(Tensor* input) {
-		Tensor* x;
-		x = this->linear1->forward(input);
-		x = this->relu1->forward(x);
-		x = this->linear2->forward(x);
-		x = this->relu2->forward(x);
-		x = this->linear3->forward(x);
-		x = this->softmax->forward(x);
-
-		return x;
-}
 
 
 
@@ -81,6 +32,9 @@ int main(void) {
 		lbl_dataset test_lbl = load_lbl_dataset(test_lbl_file, test_sample_length);
 
 
+		f32* dummy_ptr;
+		cudaMalloc(&dummy_ptr, 1 << 30);
+
 
 		BigModel* model = new BigModel();
 		model->to(CUDA);
@@ -93,9 +47,9 @@ int main(void) {
 		Tensor* expected_output;
 		Tensor* loss_tensor;
 		f32 pass_loss;
-		for (u64 k=0; k<10; k++) {// epochs
+		for (u64 k=0; k<100; k++) {// epochs
 				f64 running_loss = 0;
-				for (u64 j=0; j<50000; j++) {
+				for (u64 j=0; j<20; j++) {
 						optim.zero_grad();
 
 						input = train_img.images[j].get();
@@ -115,9 +69,11 @@ int main(void) {
 						cudaMemcpy(&pass_loss, &loss_tensor->data[0], sizeof(f32), cudaMemcpyDeviceToHost);
 
 						running_loss += pass_loss;
-				}
 
-				cout << running_loss/20.0f << endl;
+						input->to(CPU);
+						expected_output->to(CPU);
+				}
+				cout << running_loss/1000.0f << endl;
 		}
 
 
