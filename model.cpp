@@ -4,9 +4,9 @@
 BigModel::BigModel() {
 		this->activation = nullptr;
 
-		this->linear1 = new Linear(784, 800);
-		this->linear2 = new Linear(800, 800);
-		this->linear3 = new Linear(800, 10);
+		this->linear1 = new Linear(784, 16);
+		this->linear2 = new Linear(16, 16);
+		this->linear3 = new Linear(16, 10);
 
 		this->relu1 = new ReLU();
 		this->relu2 = new ReLU();

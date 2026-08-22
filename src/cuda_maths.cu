@@ -131,7 +131,7 @@ __global__ void _softmax_kernel(const f32* A, f32* out,
 						maximums_sums[last_idx] = fmaxf(maximums_sums[last_idx], A[line*last_dim + i]);
 		}
 		else {
-				maximums_sums[last_idx] = 0.0f;
+				maximums_sums[last_idx] = 0xff800000; // -inf
 		}
 
 		__syncthreads();
@@ -293,7 +293,7 @@ __global__ void _crossentropyloss_kernel(const f32* A, const f32* expected, f32*
 		if (idx < size) {
 				sums[tid] = - expected[idx] * __logf(A[idx]) * scalar;
 				for (u32 i=idx+grid_stride; i<size; i+=grid_stride) {
-						sums[tid] += - expected[i] * __logf(A[i]) * scalar;
+						sums[tid] += - expected[i] * __logf(A[i] + 0.00001f) * scalar; // hardcoded epsilon
 				}
 		}
 		else {
@@ -326,7 +326,7 @@ __global__ void _crossentropyloss_backward_kernel(const f32* A, const f32* expec
 		f32 scalar = 1.0f / (f32)size;
 
 		if (idx < size)
-				input_grad[idx] -= downstream_grad[0] * scalar * expected[idx] / A[idx];
+				input_grad[idx] -= downstream_grad[0] * scalar * expected[idx] / (A[idx] + 0.00001f); // hardcoded epsilon
 }
 __global__ void _relu_kernel(const f32* A, f32* out,
 		       u32 size) {
