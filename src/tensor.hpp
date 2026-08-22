@@ -99,7 +99,7 @@ class CrossEntropyLossNode : public Node {
 		public:
 				CrossEntropyLossNode(Tensor* input, Tensor* expected_output, Tensor* loss);
 				void apply() override;
-}
+};
 
 
 #endif

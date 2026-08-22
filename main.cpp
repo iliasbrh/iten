@@ -21,8 +21,8 @@ u32 argmax(f32* data) { // for data of length 10
 int main(void) {
 		cout << "Finished compiling, now running from entry point" << endl;
 
-		u32 train_sample_length = 64;
-		u32 test_sample_length = 1000;
+		u32 train_sample_length = 38400;
+		u32 test_sample_length = 10000;
 		
 		FILE* train_img_file = fopen("mnist_dataset/train-images.idx3-ubyte", "rb");
 		FILE* train_lbl_file = fopen("mnist_dataset/train-labels.idx1-ubyte", "rb");
@@ -46,7 +46,7 @@ int main(void) {
 
 		BigModel model;
 		model.to(CUDA);
-		MSELoss criterion;
+		CrossEntropyLoss criterion;
 
 		Adam optim(&model);
 		

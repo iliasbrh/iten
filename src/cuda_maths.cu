@@ -293,7 +293,7 @@ __global__ void _crossentropyloss_kernel(const f32* A, const f32* expected, f32*
 		if (idx < size) {
 				sums[tid] = - expected[idx] * __logf(A[idx]) * scalar;
 				for (u32 i=idx+grid_stride; i<size; i+=grid_stride) {
-						sums[tid] += - expected[i] * __logf(A[i]) * scaler;
+						sums[tid] += - expected[i] * __logf(A[i]) * scalar;
 				}
 		}
 		else {
@@ -318,7 +318,7 @@ __global__ void _crossentropyloss_kernel(const f32* A, const f32* expected, f32*
 		if (tid == 0) atomicAdd(&out[0], sums[0]);
 
 }
-__global__ void _mseloss_backward_kernel(const f32* A, const f32* expected, 
+__global__ void _crossentropyloss_backward_kernel(const f32* A, const f32* expected, 
 				       const f32* downstream_grad, f32* input_grad,
 					   u32 size) {
 		u32 idx = blockDim.x * blockIdx.x + threadIdx.x;
