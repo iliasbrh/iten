@@ -39,6 +39,12 @@ Tensor* Linear::forward(Tensor* input) {
 				output_shape[output_shape.size() - 1] = this->weight->shape[0];
 				this->activation = new Tensor(output_shape, input->device);
 		}
+		if (input->shape[0] != this->activation->shape[0]) { // changed batch size
+				delete this->activation;
+				std::vector<u32> output_shape = input->shape;
+				output_shape[output_shape.size() - 1] = this->weight->shape[0];
+				this->activation = new Tensor(output_shape, input->device);
+		}
 
 		// zero grad (not done with parameters, for which it is done with optimizer)
 		if (this->activation->requires_grad)
@@ -72,6 +78,10 @@ ReLU::ReLU() {
 Tensor* ReLU::forward(Tensor* input) {
 		if (!this->activation)
 				this->activation = new Tensor(input->shape, input->device);
+		if (input->shape[0] != this->activation->shape[0]) { // changed batch size
+				delete this->activation;
+				this->activation = new Tensor(input->shape, input->device);
+		}
 		if (this->activation->requires_grad)
 				zero_memory_grad(this->activation);
 
@@ -96,6 +106,10 @@ Softmax::Softmax(f32 temperature) {
 Tensor* Softmax::forward(Tensor* input) {
 		if (!this->activation)
 				this->activation = new Tensor(input->shape, input->device);
+		if (input->shape[0] != this->activation->shape[0]) { // changed batch size
+				delete this->activation;
+				this->activation = new Tensor(input->shape, input->device);
+		}
 		if (this->activation->requires_grad)
 				zero_memory_grad(this->activation);
 
@@ -120,6 +134,10 @@ MSELoss::MSELoss() {
 Tensor* MSELoss::forward(Tensor* input, Tensor* expected_output) {
 		if (!this->activation)
 				this->activation = new Tensor({1}, input->device);
+		if (input->shape[0] != this->activation->shape[0]) { // changed batch size
+				delete this->activation;
+				this->activation = new Tensor({1}, input->device);
+		}
 		if (this->activation->requires_grad)
 				zero_memory_grad(this->activation);
 
@@ -143,6 +161,10 @@ CrossEntropyLoss::CrossEntropyLoss() {
 Tensor* CrossEntropyLoss::forward(Tensor* input, Tensor* expected_output) {
 		if (!this->activation)
 				this->activation = new Tensor({1}, input->device);
+		if (input->shape[0] != this->activation->shape[0]) { // changed batch size
+				delete this->activation;
+				this->activation = new Tensor({1}, input->device);
+		}
 		if (this->activation->requires_grad)
 				zero_memory_grad(this->activation);
 

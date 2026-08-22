@@ -38,6 +38,7 @@ void linear_layer(const Tensor* input, const Tensor* weight, const Tensor* bias,
 								out->data, bias->data, out->data,
 								n_lines, out_features, 1,
 								0, 1, 0);
+				cudaDeviceSynchronize();
 		}
 		else std::cout << "Invalid device for computation" << std::endl;
 }
@@ -83,6 +84,7 @@ void linear_layer_backward(Tensor* input, Tensor* weight, Tensor* bias, const Te
 								bias->grad, out->grad, bias->grad,
 								n_lines, out_features, 1,
 								1, 0, 1);
+				cudaDeviceSynchronize();
 				}
 		}
 		else std::cout << "Invalid device for computation" << std::endl;
@@ -104,6 +106,7 @@ void softmax(const Tensor* input, Tensor* out) {
 				_softmax_kernel<<<blocksPerGrid, threadsPerBlock, 2*threadsPerBlock.x*sizeof(f32)>>>(
 								input->data, out->data,
 								n_lines, last_dim);
+				cudaDeviceSynchronize();
 		}
 		else std::cout << "Invalid device for computation" << std::endl;
 }
@@ -125,6 +128,7 @@ void softmax_backward(Tensor* input, const Tensor* out) {
 				_softmax_backward_kernel<<<blocksPerGrid, threadsPerBlock, sharedMemBytes>>>(
 								out->grad, out->data, input->grad,
 								n_lines, last_dim);
+				cudaDeviceSynchronize();
 		}
 		else std::cout << "Invalid device for computation" << std::endl;
 }
@@ -145,6 +149,7 @@ void mseloss(const Tensor* input, const Tensor* expected, Tensor* out) {
 				_mseloss_kernel<<<blocksPerGrid, threadsPerBlock, sharedMemBytes>>>(
 								input->data, expected->data, out->data,
 								size);
+				cudaDeviceSynchronize();
 		}
 		else std::cout << "Invalid device for computation" << std::endl;
 }
@@ -162,6 +167,7 @@ void mseloss_backward(Tensor* input, const Tensor* expected, Tensor* out) {
 				_mseloss_backward_kernel<<<blocksPerGrid, threadsPerBlock>>>(
 								input->data, expected->data, out->grad, input->grad,
 								size);
+				cudaDeviceSynchronize();
 		}
 		else std::cout << "Invalid device for computation" << std::endl;
 }
@@ -182,6 +188,7 @@ void crossentropyloss(const Tensor* input, const Tensor* expected, Tensor* out) 
 				_crossentropyloss_kernel<<<blocksPerGrid, threadsPerBlock, sharedMemBytes>>>(
 								input->data, expected->data, out->data,
 								size);
+				cudaDeviceSynchronize();
 		}
 		else std::cout << "Invalid device for computation" << std::endl;
 }
@@ -199,6 +206,7 @@ void crossentropyloss_backward(Tensor* input, const Tensor* expected, Tensor* ou
 				_mseloss_backward_kernel<<<blocksPerGrid, threadsPerBlock>>>(
 								input->data, expected->data, out->grad, input->grad,
 								size);
+				cudaDeviceSynchronize();
 		}
 		else std::cout << "Invalid device for computation" << std::endl;
 }
@@ -215,6 +223,7 @@ void relu(const Tensor* input, Tensor* output) {
 				_relu_kernel<<<blocksPerGrid, threadsPerBlock>>>(
 								input->data, output->data,
 								size);
+				cudaDeviceSynchronize();
 		}
 		else std::cout << "Invalid device for computation" << std::endl;
 }
@@ -231,6 +240,7 @@ void relu_backward(Tensor* input, const Tensor* output) {
 				_relu_backward_kernel<<<blocksPerGrid, threadsPerBlock>>>(
 								output->grad, input->data, input->grad,
 								size);
+				cudaDeviceSynchronize();
 		}
 		else std::cout << "Invalid device for computation" << std::endl;
 }
@@ -294,6 +304,7 @@ void zero_memory(Tensor* t) {
 				memset(t->data, 0, t->size*sizeof(f32));
 		else if (t->device == CUDA)
 				cudaMemset(t->data, 0, t->size*sizeof(f32));
+				cudaDeviceSynchronize();
 }
 
 void zero_memory_grad(Tensor* t) {
@@ -302,6 +313,7 @@ void zero_memory_grad(Tensor* t) {
 		else if (t->device == CUDA) {
 				size_t mem_size = (size_t)t->size * sizeof(f32);
 				cudaMemset(t->grad, 0, mem_size);
+				cudaDeviceSynchronize();
 		}
 		else
 				std::cout << "Invalid device for computation" << std::endl;
@@ -316,6 +328,7 @@ void grad_fill_ones(Tensor* t) {
 				i32 threads = 256;
 				i32 blocks = bpg(t->size, threads);
 				_set_value_kernel<<<blocks, threads>>>(t->grad, 1.0f, t->size);
+				cudaDeviceSynchronize();
 		}
 }
 
