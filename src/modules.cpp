@@ -134,10 +134,6 @@ MSELoss::MSELoss() {
 Tensor* MSELoss::forward(Tensor* input, Tensor* expected_output) {
 		if (!this->activation)
 				this->activation = new Tensor({1}, input->device);
-		if (input->shape[0] != this->activation->shape[0]) { // changed batch size
-				delete this->activation;
-				this->activation = new Tensor({1}, input->device);
-		}
 		if (this->activation->requires_grad)
 				zero_memory_grad(this->activation);
 
@@ -161,10 +157,6 @@ CrossEntropyLoss::CrossEntropyLoss() {
 Tensor* CrossEntropyLoss::forward(Tensor* input, Tensor* expected_output) {
 		if (!this->activation)
 				this->activation = new Tensor({1}, input->device);
-		if (input->shape[0] != this->activation->shape[0]) { // changed batch size
-				delete this->activation;
-				this->activation = new Tensor({1}, input->device);
-		}
 		if (this->activation->requires_grad)
 				zero_memory_grad(this->activation);
 

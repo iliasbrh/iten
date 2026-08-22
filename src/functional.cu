@@ -203,7 +203,7 @@ void crossentropyloss_backward(Tensor* input, const Tensor* expected, Tensor* ou
 		else if (input->device == CUDA) {
 				i32 threadsPerBlock = 256;
 				i32 blocksPerGrid = bpg(size, 256);
-				_mseloss_backward_kernel<<<blocksPerGrid, threadsPerBlock>>>(
+				_crossentropyloss_backward_kernel<<<blocksPerGrid, threadsPerBlock>>>(
 								input->data, expected->data, out->grad, input->grad,
 								size);
 				cudaDeviceSynchronize();

@@ -1,5 +1,7 @@
 **.exe
 cuda_debug
+cuda_release
+
 todo.txt
 files.txt
 **ubyte
