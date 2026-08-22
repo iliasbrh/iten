@@ -34,6 +34,11 @@ __global__ void _mseloss_kernel(const f32* A, const f32* expected, f32* out,
 __global__ void _mseloss_backward_kernel(const f32* A, const f32* expected, 
 				       const f32* downstream_grad, f32* input_grad,
 					   u32 size);
+__global__ void _crossentropyloss_kernel(const f32* A, const f32* expected, f32* out,
+		      u32 size);
+__global__ void _crossentropyloss_backward_kernel(const f32* A, const f32* expected, 
+				       const f32* downstream_grad, f32* input_grad,
+					   u32 size);
 
 
 __global__ void _relu_kernel(const f32* A, f32* out,

@@ -137,7 +137,9 @@ void MSELossNode::apply() {
 		mseloss_backward(this->input_ctx, this->expected_output_ctx, this->tensor);
 }
 
-
+void CrossEntropyLossNode::apply() {
+		crossentropyloss_backward(this->input_ctx, this->expected_output_ctx, this->tensor);
+}
 
 
 

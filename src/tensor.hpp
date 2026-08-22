@@ -91,7 +91,15 @@ class MSELossNode : public Node {
 				void apply() override;
 };
 
+class CrossEntropyLossNode : public Node {
+		private:
+				Tensor* input_ctx;
+				Tensor* expected_output_ctx;
 
+		public:
+				CrossEntropyLossNode(Tensor* input, Tensor* expected_output, Tensor* loss);
+				void apply() override;
+}
 
 
 #endif

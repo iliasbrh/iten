@@ -279,6 +279,55 @@ __global__ void _mseloss_backward_kernel(const f32* A, const f32* expected,
 				input_grad[idx] += downstream_grad[0] * 2.0f * scalar * (A[idx] - expected[idx]);
 				// taking downstream_grad[0] because mseloss outputs a single value
 }
+__global__ void _crossentropyloss_kernel(const f32* A, const f32* expected, f32* out,
+		      u32 size) {
+		u32 idx = blockDim.x * blockIdx.x + threadIdx.x;
+		u32 tid = threadIdx.x;
+		u32 grid_stride = blockDim.x * gridDim.x;
+
+		extern __shared__ float sums[];
+
+		f32 scalar = 1.0f / (f32)size; // to aovid having to scale with one single thread at the end because it would cause race conditions
+								       // across different blocks (we cant synchronize different blocks)
+
+		if (idx < size) {
+				sums[tid] = - expected[idx] * __logf(A[idx]) * scalar;
+				for (u32 i=idx+grid_stride; i<size; i+=grid_stride) {
+						sums[tid] += - expected[i] * __logf(A[i]) * scaler;
+				}
+		}
+		else {
+				sums[tid] = 0.0f; // flat out the garbage to zero to not bother adding it afterwards, the threads will run anyway
+		}
+
+		__syncthreads();
+
+		u32 binary_divide = blockDim.x;
+		i32 add_last = binary_divide%2;
+		while (binary_divide > 1) {
+				if (tid == 0 && add_last) 
+						sums[0] += sums[binary_divide-1];
+				binary_divide /= 2;
+				if (tid < binary_divide)
+						sums[tid] += sums[tid+binary_divide];
+
+				__syncthreads();
+				add_last = binary_divide%2;
+		}
+
+		if (tid == 0) atomicAdd(&out[0], sums[0]);
+
+}
+__global__ void _mseloss_backward_kernel(const f32* A, const f32* expected, 
+				       const f32* downstream_grad, f32* input_grad,
+					   u32 size) {
+		u32 idx = blockDim.x * blockIdx.x + threadIdx.x;
+		
+		f32 scalar = 1.0f / (f32)size;
+
+		if (idx < size)
+				input_grad[idx] -= downstream_grad[0] * scalar * expected[idx] / A[idx];
+}
 __global__ void _relu_kernel(const f32* A, f32* out,
 		       u32 size) {
 		u32 idx = blockDim.x * blockIdx.x + threadIdx.x;

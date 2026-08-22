@@ -172,6 +172,45 @@ void mseloss_backward(Tensor* input, const Tensor* expected, Tensor* out) {
 		}
 		else std::cout << "Invalid device for computation" << std::endl;
 }
+void crossentropyloss(const Tensor* input, const Tensor* expected, Tensor* out) {
+		_check_same_device({input->device, expected->device, out->device});
+		u32 size = input->size;
+
+		if (input->device == CPU)
+				_crossentropyloss(input->data, expected->data, out->data,
+				 size);
+		else if (input->device == CUDA) {
+				i32 threadsPerBlock = 256;
+				i32 blocksPerGrid = bpg(size, 256);
+				size_t sharedMemBytes = threadsPerBlock * sizeof(f32);
+
+				cudaMemset(out->data, 0, sizeof(f32));
+
+				_crossentropyloss_kernel<<<blocksPerGrid, threadsPerBlock, sharedMemBytes>>>(
+								input->data, expected->data, out->data,
+								size);
+				cudaDeviceSynchronize();
+		}
+		else std::cout << "Invalid device for computation" << std::endl;
+}
+void crossentropyloss_backward(Tensor* input, const Tensor* expected, Tensor* out) {
+		_check_same_device({input->device, expected->device, out->device});
+		u32 size = input->size;
+		
+		if (input->device == CPU)
+				_crossentropyloss_backward(input->data, expected->data,
+						 out->grad, input->grad,
+						 size);
+		else if (input->device == CUDA) {
+				i32 threadsPerBlock = 256;
+				i32 blocksPerGrid = bpg(size, 256);
+				_mseloss_backward_kernel<<<blocksPerGrid, threadsPerBlock>>>(
+								input->data, expected->data, out->grad, input->grad,
+								size);
+				cudaDeviceSynchronize();
+		}
+		else std::cout << "Invalid device for computation" << std::endl;
+}
 void relu(const Tensor* input, Tensor* output) {
 		_check_same_device({input->device, output->device});
 		u32 size = input->size;

@@ -132,6 +132,29 @@ Tensor* MSELoss::forward(Tensor* input, Tensor* expected_output) {
 }
 
 
+//////////////////////
+// CrossEntropyLoss //
+//////////////////////
+
+CrossEntropyLoss::CrossEntropyLoss() {
+		this->activation = nullptr;
+}
+
+Tensor* CrossEntropyLoss::forward(Tensor* input, Tensor* expected_output) {
+		if (!this->activation)
+				this->activation = new Tensor({1}, input->device);
+		if (this->activation->requires_grad)
+				zero_memory_grad(this->activation);
+
+		crossentropyloss(input, expected_output, this->activation);
+
+		if (this->activation->grad_node) delete this->activation->grad_node;
+		this->activation->grad_node = new CrossEntropyLossNode(input, expected_output, this->activation);
+
+		return this->activation;
+}
+
+
 
 
 

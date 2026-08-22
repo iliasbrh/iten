@@ -45,6 +45,11 @@ void _mseloss(const f32* A, const f32* expected, f32* out,
 void _mseloss_backward(const f32* A, const f32* expected, 
 				       const f32* downstream_grad, f32* input_grad,
 					   u32 size);
+void _crossentropyloss(const f32* A, const f32* expected, f32* out,
+		      u32 size); // size is the product of the vector size and the batch size (since anyway we average on both)
+void _crossentropyloss_backward(const f32* A, const f32* expected, 
+				       const f32* downstream_grad, f32* input_grad,
+					   u32 size);
 
 
 // element-wise operations (matrix shape not needed as parameter)

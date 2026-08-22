@@ -20,6 +20,8 @@ void softmax(const Tensor* input, Tensor* out); // add temperature to computatio
 void softmax_backward(Tensor* input, const Tensor* out);
 void mseloss(const Tensor* input, const Tensor* expected, Tensor* out);
 void mseloss_backward(Tensor* input, const Tensor* expected, Tensor* out);
+void crossentropyloss(const Tensor* input, const Tensor* expected, Tensor* out);
+void crossentropyloss_backward(Tensor* input, const Tensor* expected, Tensor* out);
 void relu(const Tensor* input, Tensor* output);
 void relu_backward(Tensor* input, const Tensor* output);
 

@@ -166,6 +166,20 @@ void _mseloss_backward(const f32* A, const f32* expected, const f32* downstream_
 				input_grad[i] += 2.0f * (A[i] - expected[i]) * scaler * (*downstream_grad);
 				// using += instead of = because in backward passes we accumulate gradients (in case of multiple contributions through, let's say, residual connections e.g.)
 }
+void _crossentropyloss(const f32* A, const f32* expected, f32* out,
+				       u32 size) {
+		*out = 0.0f;
+		for (u32 i = 0; i < size; i++)
+				*out -= expected[i] * logf(A[i]);
+		*out *= 1.0f / (f32)size;
+}
+void _crossentropyloss_backward(const f32* A, const f32* expected, const f32* downstream_grad,
+								f32* input_grad,
+								u32 size) {
+		f32 scaler = 1.0f / (f32)size;
+		for (u32 i=0; i < size; i++)
+				input_grad[i] -= expected[i] * scaler * (*downstream_grad) / A[i];
+}
 void _relu(const f32* A, f32* out,
 		       u32 size) {
 		for (u32 i = 0; i < size; i++)

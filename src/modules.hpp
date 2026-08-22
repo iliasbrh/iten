@@ -61,6 +61,14 @@ class MSELoss : public Module {
 				Tensor* forward(Tensor* input, Tensor* expected_output);
 };
  
+class CrossEntropyLoss : public Module {
+		private:
+				Tensor* forward(Tensor*) override {return nullptr;};
 
+		public:
+				CrossEntropyLoss();
+				
+				Tensor* forward(Tensor* input, Tensor* expected_output);
+};
 
 #endif
