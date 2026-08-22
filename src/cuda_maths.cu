@@ -131,7 +131,7 @@ __global__ void _softmax_kernel(const f32* A, f32* out,
 						maximums_sums[last_idx] = fmaxf(maximums_sums[last_idx], A[line*last_dim + i]);
 		}
 		else {
-				maximums_sums[last_idx] = 0xff800000; // -inf
+				maximums_sums[last_idx] = -1000.0f;
 		}
 
 		__syncthreads();

@@ -21,7 +21,7 @@ u32 argmax(f32* data) { // for data of length 10
 int main(void) {
 		cout << "Finished compiling, now running from entry point" << endl;
 
-		u32 train_sample_length = 38400;
+		u32 train_sample_length = 32*1200;
 		u32 test_sample_length = 10000;
 		
 		FILE* train_img_file = fopen("mnist_dataset/train-images.idx3-ubyte", "rb");
@@ -32,20 +32,22 @@ int main(void) {
 		
 		Tensor* X_train = load_mnist_images(train_img_file, train_sample_length);
 		Tensor* Y_train = load_mnist_labels(train_lbl_file, train_sample_length);
-		Tensor* X_test = load_mnist_images(test_img_file, train_sample_length);
-		Tensor* Y_test = load_mnist_labels(test_lbl_file, train_sample_length);
+		Tensor* X_test = load_mnist_images(test_img_file, test_sample_length);
+		Tensor* Y_test = load_mnist_labels(test_lbl_file, test_sample_length);
 
 		cout << "Loaded data" << endl;
 
 		u32 batch_size = 32;
 		u32 n_batch = train_sample_length / batch_size;
 
+		device_t device = CPU;
+
 		MNISTDataloader train_dataloader(X_train, Y_train, batch_size, true);
 		MNISTDataloader test_dataloader(X_test, Y_test, 1);
 
 
 		BigModel model;
-		model.to(CUDA);
+		model.to(device);
 		CrossEntropyLoss criterion;
 
 		Adam optim(&model);
@@ -68,16 +70,19 @@ int main(void) {
 						input = batch_data[0];
 						expected_output = batch_data[1];
 						
-						input->to(CUDA);
+						input->to(device);
 						output = model.forward(input);
 
-						expected_output->to(CUDA);
+						expected_output->to(device);
 						loss_tensor = criterion.forward(output, expected_output);
 
 						loss_tensor->backward();
 						optim.step();
 
-						cudaMemcpy(&pass_loss, &loss_tensor->data[0], sizeof(f32), cudaMemcpyDeviceToHost);
+						if (device == CUDA)
+							cudaMemcpy(&pass_loss, &loss_tensor->data[0], sizeof(f32), cudaMemcpyDeviceToHost);
+						else if (device == CPU)
+							pass_loss = loss_tensor->data[0];
 
 						running_loss += pass_loss;
 				}
@@ -86,6 +91,7 @@ int main(void) {
 				running_loss = 0;
 				f32* output_probabilities = (f32*)malloc(10*sizeof(f32));
 				u32 good_predictions = 0;
+				u32 prediction;
 				for (u64 j=0; j<test_sample_length; j++) {
 						vector<Tensor*> batch_data = test_dataloader.get_batch();
 						input = batch_data[0];
@@ -93,20 +99,25 @@ int main(void) {
 
 						u32 expected_idx = argmax(expected_output->data);
 
-						input->to(CUDA);
+						input->to(device);
 						output = model.forward(input);
-						expected_output->to(CUDA);
+						expected_output->to(device);
 						loss_tensor = criterion.forward(output, expected_output);
 
-						cudaMemcpy(&pass_loss, &loss_tensor->data[0], sizeof(f32), cudaMemcpyDeviceToHost);
-						cudaMemcpy(output_probabilities, &output->data[0], 10*sizeof(f32), cudaMemcpyDeviceToHost);
+						if (device == CUDA) {
+							cudaMemcpy(&pass_loss, &loss_tensor->data[0], sizeof(f32), cudaMemcpyDeviceToHost);
+							cudaMemcpy(output_probabilities, &output->data[0], 10*sizeof(f32), cudaMemcpyDeviceToHost);
+							prediction = argmax(output_probabilities);
+						}
+						else if (device == CPU) {
+							pass_loss = loss_tensor->data[0];
+							prediction = argmax(output->data);
+						}
 
-						u32 prediction = argmax(output_probabilities);
-						
 						running_loss += pass_loss;
 						good_predictions += (prediction == expected_idx);
 				}
-				cout << "Test loss : " << running_loss/(f32)test_sample_length << endl;
+				cout << "Test loss : " << running_loss/(f64)test_sample_length << endl;
 				cout << "Accuracy : " << 100*(f32)good_predictions/(f32)test_sample_length << "%" << endl;
 				cout << "------------------------------" << endl;
 		}
