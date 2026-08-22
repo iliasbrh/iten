@@ -1,4 +1,10 @@
-SOURCES = ./main.cpp ./src/maths.cpp ./src/cuda_maths.cu ./src/device_memory.cu ./src/functional.cu ./src/tensor.cpp ./src/modules.cpp ./src/optimizer.cpp ./read_ubyte.cpp ./model.cpp;
+SOURCES = ./main.cpp \
+		  ./src/maths.cpp ./src/cuda_maths.cu \
+		  ./src/device_memory.cu ./src/functional.cu \
+		  ./src/tensor.cpp \
+		  ./src/modules.cpp ./src/optimizer.cpp \
+		  ./read_ubyte.cpp ./model.cpp \
+		  ./src/prng.c;
 
 build_nvcc: $(SOURCES)
 	@nvcc -std=c++20 -O3 -lineinfo -DNDEBUG \
@@ -14,4 +20,6 @@ debug_nvcc: $(SOURCES)
     -o cuda_debug $(SOURCES) 
 
 clean:
-	rm ./cuda_debug
+	@rm ./cuda_debug > /dev/null 2>&1
+	@rm ./main.exe > /dev/null 2>&1
+	@rm ./cuda_release > /dev/null 2>&1
