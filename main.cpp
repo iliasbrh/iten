@@ -21,7 +21,7 @@ u32 argmax(f32* data) { // for data of length 10
 int main(void) {
 		cout << "Finished compiling, now running from entry point" << endl;
 
-		u32 train_sample_length = 32*1200;
+		u32 train_sample_length = 32*400;
 		u32 test_sample_length = 10000;
 		
 		FILE* train_img_file = fopen("mnist_dataset/train-images.idx3-ubyte", "rb");

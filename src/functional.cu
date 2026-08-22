@@ -101,8 +101,8 @@ void softmax(const Tensor* input, Tensor* out) {
 				_softmax(input->data, out->data,
 				 n_lines, last_dim);
 		else if (input->device == CUDA) {
-				dim3 threadsPerBlock(64, 16);
-				dim3 blocksPerGrid(bpg(last_dim, 64), bpg(n_lines, 16));
+				dim3 threadsPerBlock(1024, 1);
+				dim3 blocksPerGrid(1, n_lines);
 				_softmax_kernel<<<blocksPerGrid, threadsPerBlock, 2*threadsPerBlock.x*sizeof(f32)>>>(
 								input->data, out->data,
 								n_lines, last_dim);
@@ -122,8 +122,8 @@ void softmax_backward(Tensor* input, const Tensor* out) {
 				_softmax_backward(out->grad, out->data, input->grad,
 						  n_lines, last_dim);
 		else if (input->device == CUDA) {
-				dim3 threadsPerBlock(64, 16);
-				dim3 blocksPerGrid(bpg(last_dim, 64), bpg(n_lines, 16));
+				dim3 threadsPerBlock(1024, 1);
+				dim3 blocksPerGrid(1, n_lines);
 				size_t sharedMemBytes = threadsPerBlock.x * sizeof(f32);
 				_softmax_backward_kernel<<<blocksPerGrid, threadsPerBlock, sharedMemBytes>>>(
 								out->grad, out->data, input->grad,

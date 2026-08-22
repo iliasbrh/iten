@@ -116,7 +116,6 @@ __global__ void _softmax_kernel(const f32* A, f32* out,
 		// to run with a single block for the last dim so that i don't have to do atomic adds or atomic maxs on global memory
 		// instead i use grid stride to stay in the same block and have the same shared memory
 		// so gridDim.x = 1, and thus blockIdx.x = 0
-		// running with 1024 threads on the x axis (so 1 on the y axis) to counterbalance the issue
 		u32 last_idx = threadIdx.x;
 		u32 line = blockDim.y * blockIdx.y + threadIdx.y;
 		u32 grid_stride = blockDim.x;
@@ -291,7 +290,7 @@ __global__ void _crossentropyloss_kernel(const f32* A, const f32* expected, f32*
 								       // across different blocks (we cant synchronize different blocks)
 
 		if (idx < size) {
-				sums[tid] = - expected[idx] * __logf(A[idx]) * scalar;
+				sums[tid] = - expected[idx] * __logf(A[idx] + 0.00001f) * scalar;
 				for (u32 i=idx+grid_stride; i<size; i+=grid_stride) {
 						sums[tid] += - expected[i] * __logf(A[i] + 0.00001f) * scalar; // hardcoded epsilon
 				}
