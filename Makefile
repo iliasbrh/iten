@@ -3,13 +3,13 @@ SOURCES = ./main.cpp \
 		  ./src/device_memory.cu ./src/functional.cu \
 		  ./src/tensor.cpp \
 		  ./src/modules.cpp ./src/optimizer.cpp \
+		  ./src/dataloader.cpp \
 		  ./read_ubyte.cpp ./model.cpp \
-		  ./src/prng.c;
+		  ./src/prng.cpp;
 
 build_nvcc: $(SOURCES)
-	@nvcc -std=c++20 -O3 -lineinfo -DNDEBUG \
-    --all-warnings \
-    -Xcompiler -O3,-Wall,-Wextra,-flto \
+	@nvcc -std=c++20 -O3 \
+    -Xcompiler -O3,-Wno-unused-result,-fno-lto \
     -arch=native \
     -o cuda_release $(SOURCES)
 

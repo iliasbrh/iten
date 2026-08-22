@@ -1,4 +1,8 @@
-#include "prng.h"
+#include "prng.hpp"
+
+static uint64_t       state      = 0x4d595df4d0f33173;
+static uint64_t const multiplier = 6364136223846793005u;
+static uint64_t const increment  = 1442695040888963407u;
 
 static uint32_t rotr32(uint32_t x, unsigned r)
 {
@@ -24,12 +28,12 @@ void pcg32_init(uint64_t seed)
 int32_t randint(int32_t a, int32_t b) // b not included
 {
 		int32_t delta = b - a;
-		int32_t rnd = pcg32() % delta;
+		int32_t rnd = (int32_t)( pcg32() % delta );
 
 		return rnd + a;
 }
 
-float random(void)
+float rand_uniform(void)
 {
 		return 0.5f * (float)pcg32() / (float)MAX_RAND;
 }

@@ -2,7 +2,7 @@
 
 
 void shuffle_indexing(u32* indexing, u32 n_samples) {
-		for (i32 i=n_samples-1; i>0; i++) {
+		for (i32 i=n_samples-1; i>0; i--) {
 				u32 rand_idx = randint(0, i);
 				u32 tmp = indexing[rand_idx];
 				indexing[rand_idx] = indexing[i];
@@ -11,16 +11,16 @@ void shuffle_indexing(u32* indexing, u32 n_samples) {
 }
 
 
-MNISTDataloader::MNISTDataloader(Tensor* input_data, Tensor* expected_output_data, u32 batchsize) {
+MNISTDataloader::MNISTDataloader(Tensor* input_data, Tensor* expected_output_data, u32 batchsize, b32 random_shuffle) {
 		this->n_samples = (input_data->shape[0] / batchsize) * batchsize; // we skip the last elements so that n_samples is a multiple of the batchsize
-		std::cout << this->n_samples << std::endl;
 		this->batch_size = batchsize;
+		this->shuffle = random_shuffle;
 		this->idx = 0;
 
 		// preparing indexing
-		this->indexes = (u32*)malloc(this->n_samples * sizeof(f32));
+		this->indexes = (u32*)malloc(this->n_samples * sizeof(u32));
 		for (u32 i=0; i<this->n_samples; i++) this->indexes[i] = i;
-		shuffle_indexing(this->indexes, this->n_samples);
+		if (this->shuffle) shuffle_indexing(this->indexes, this->n_samples);
 		
 		// storing data pointers
 		this->input = input_data;
@@ -61,7 +61,7 @@ MNISTDataloader::~MNISTDataloader() {
 std::vector<Tensor*> MNISTDataloader::get_batch() {
 		// shuffling in case we start a new epoch
 		if (this->idx >= this->n_samples) {
-				shuffle_indexing(this->indexes, this->n_samples);
+				if (this->shuffle) shuffle_indexing(this->indexes, this->n_samples);
 				this->idx = 0;
 		}
 		
